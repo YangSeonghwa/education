@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f2">
+  <title>교실도움 — 교사를 위한 AI 준비 도구</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      color: #20312b;
+      background: #f5f7f2;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --green: #246b52;
+      --green-dark: #194d3b;
+      --muted: #64736c;
+      --line: #dce5dd;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; }
+    button, input, select, textarea { font: inherit; }
+    .page { width: min(100% - 40px, 1040px); margin: 0 auto; }
+    header { padding: 28px 0 18px; }
+    .brand { color: var(--green); font-size: 15px; font-weight: 800; letter-spacing: .02em; }
+    main { padding: 30px 0 72px; }
+    .intro { max-width: 660px; margin-bottom: 28px; }
+    .eyebrow { color: var(--green); font-size: 13px; font-weight: 750; }
+    h1 { margin: 9px 0 12px; font-size: clamp(30px, 5vw, 44px); line-height: 1.2; letter-spacing: -.04em; }
+    .intro p { margin: 0; color: var(--muted); line-height: 1.7; }
+    .workspace { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: 20px; align-items: start; }
+    .card { padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 8px 28px rgb(32 49 43 / 4%); }
+    h2 { margin: 0 0 20px; font-size: 19px; letter-spacing: -.02em; }
+    .field { margin-top: 16px; }
+    label { display: block; margin-bottom: 7px; font-size: 14px; font-weight: 700; }
+    .hint { color: var(--muted); font-size: 12px; font-weight: 400; }
+    input, select, textarea { width: 100%; border: 1px solid #cbd8ce; border-radius: 9px; padding: 11px 12px; background: #fff; color: inherit; }
+    input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px solid #a9d7bf; outline-offset: 2px; }
+    textarea { min-height: 84px; resize: vertical; line-height: 1.5; }
+    .privacy { margin: 17px 0 0; padding: 12px 13px; border-radius: 9px; background: #f1f7f2; color: #435c4d; font-size: 12px; line-height: 1.6; }
+    .primary, .secondary { min-height: 44px; border: 0; border-radius: 9px; cursor: pointer; font-weight: 750; }
+    .primary { width: 100%; margin-top: 18px; padding: 11px; background: var(--green); color: #fff; }
+    .primary:hover { background: var(--green-dark); }
+    .secondary { padding: 10px 14px; border: 1px solid var(--line); background: #fff; color: var(--green-dark); }
+    .secondary:hover { background: #f4f8f4; }
+    .output-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .output-head h2 { margin-bottom: 0; }
+    .placeholder { display: grid; min-height: 355px; place-items: center; margin-top: 18px; padding: 24px; border: 1px dashed #cbd8ce; border-radius: 12px; color: var(--muted); text-align: center; line-height: 1.7; }
+    .placeholder[hidden], .result[hidden] { display: none; }
+    .result { width: 100%; min-height: 355px; margin-top: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa; color: #263b31; font-family: inherit; font-size: 14px; line-height: 1.75; white-space: pre-wrap; }
+    .output-note { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .status { min-height: 20px; margin: 8px 0 0; color: var(--green-dark); font-size: 13px; }
+    footer { padding: 0 0 30px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    @media (max-width: 720px) {
+      .page { width: min(100% - 28px, 560px); }
+      header { padding-top: 20px; }
+      main { padding-top: 22px; }
+      .workspace { grid-template-columns: 1fr; }
+      .card { padding: 20px; }
+      .placeholder, .result { min-height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page">
+    <div class="brand">교실도움 <span aria-hidden="true">·</span> 선생님의 AI 준비 도구</div>
+  </header>
+  <main class="page">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="eyebrow">수업 준비 시간을 조금 더 가볍게</div>
+      <h1 id="page-title">선생님의 아이디어를<br>AI와 함께 구체화해 보세요.</h1>
+      <p>수업 상황을 입력하면 AI에게 바로 요청할 수 있는 맞춤 프롬프트를 만들어 드려요. 프롬프트를 복사해 사용 중인 AI 서비스에 붙여 넣으세요.</p>
+    </section>
+
+    <div class="workspace">
+      <form class="card" id="prompt-form">
+        <h2>어떤 도움이 필요하세요?</h2>
+        <div class="field">
+          <label for="task">도움 종류</label>
+          <select id="task" name="task">
+            <option value="수업 지도안">수업 지도안 만들기</option>
+            <option value="활동지와 평가 문항">활동지·평가 문항 만들기</option>
+            <option value="수준별 학습 활동">수준별 학습 활동 구성하기</option>
+            <option value="학생 피드백">학생 피드백 초안 작성하기</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="grade">학년 또는 학습자 수준</label>
+          <input id="grade" name="grade" placeholder="예: 초등학교 5학년" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="subject">교과 또는 과목</label>
+          <input id="subject" name="subject" placeholder="예: 과학" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="topic">수업 주제 <span class="hint">(필수)</span></label>
+          <input id="topic" name="topic" placeholder="예: 물의 상태 변화" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="duration">수업 시간</label>
+          <select id="duration" name="duration">
+            <option value="40분">40분</option>
+            <option value="45분">45분</option>
+            <option value="50분">50분</option>
+            <option value="90분">90분 (블록 수업)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="needs">특별히 고려할 점 <span class="hint">(선택)</span></label>
+          <textarea id="needs" name="needs" placeholder="예: 모둠 활동 중심, 준비물이 적은 활동, 읽기 수준 차이 고려"></textarea>
+        </div>
+        <p class="privacy">🔒 학생 이름·연락처·성적 등 개인을 식별할 수 있는 정보는 입력하지 마세요. AI가 만든 내용은 수업에 사용하기 전에 직접 확인해 주세요.</p>
+        <button class="primary" type="submit">맞춤 프롬프트 만들기</button>
+      </form>
+
+      <section class="card" aria-labelledby="output-title">
+        <div class="output-head">
+          <h2 id="output-title">AI에게 보낼 프롬프트</h2>
+          <button class="secondary" id="copy-button" type="button" hidden>복사하기</button>
+        </div>
+        <div class="placeholder" id="placeholder">왼쪽에 수업 정보를 입력하고<br>프롬프트를 만들어 보세요.</div>
+        <pre class="result" id="result" aria-live="polite" hidden></pre>
+        <p class="output-note">이 도구는 프롬프트를 이 브라우저에서 만들 뿐, 입력 정보를 저장하거나 AI 서비스로 전송하지 않습니다. 복사한 프롬프트를 외부 AI에 붙여 넣을 때는 해당 서비스의 개인정보 정책을 확인하세요.</p>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+  </main>
+  <footer class="page">교실도움은 교사의 전문적인 판단을 돕는 준비 도구입니다. AI 결과물의 정확성과 교육과정 적합성을 확인한 뒤 활용하세요.</footer>
+  <script>
+    const form = document.querySelector("#prompt-form");
+    const result = document.querySelector("#result");
+    const placeholder = document.querySelector("#placeholder");
+    const copyButton = document.querySelector("#copy-button");
+    const status = document.querySelector("#status");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const details = [
+        `학년/수준: ${data.get("grade") || "구체적인 수준을 고려해 주세요"}`,
+        `교과: ${data.get("subject") || "교과 특성에 맞게 구성해 주세요"}`,
+        `주제: ${data.get("topic").trim()}`,
+        `수업 시간: ${data.get("duration")}`,
+      ];
+      const needs = data.get("needs").trim();
+      if (needs) details.push(`고려할 점: ${needs}`);
+
+      result.textContent = [
+        "당신은 학생의 참여와 배움을 돕는 교육 전문가입니다.",
+        `다음 조건에 맞춰 ${data.get("task")} 초안을 작성해 주세요.`,
+        "",
+        ...details,
+        "",
+        "구체적이고 교실에서 바로 활용할 수 있도록 작성하고, 학습 목표와 활동 및 평가가 서로 연결되게 해 주세요. 필요한 가정이나 추가 확인이 필요한 내용은 분명히 표시해 주세요.",
+        "학생의 개인정보를 요구하거나 만들어 내지 말고, 교육과정 또는 사실에 대한 불확실성이 있으면 이를 밝혀 주세요.",
+      ].join("\n");
+      placeholder.hidden = true;
+      result.hidden = false;
+      copyButton.hidden = false;
+      status.textContent = "프롬프트를 만들었어요. 내용을 확인한 뒤 복사해 사용하세요.";
+    });
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(result.textContent);
+        status.textContent = "프롬프트를 클립보드에 복사했어요.";
+      } catch {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(result);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        status.textContent = "자동 복사할 수 없어요. 선택된 프롬프트를 복사해 주세요.";
+      }
+    });
+  </script>
+</body>
+</html>
