@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>힘으로 발명하기! 중1 제품·서비스 기획실</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--p:#2563eb;--p2:#7c3aed}
+body{margin:0;font-family:'Malgun Gothic','Pretendard',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#7c3aed 100%);color:#fff;padding:28px 20px 22px}
+header .inner{max-width:1080px;margin:0 auto}
+.badge{display:inline-block;background:#facc15;color:#0f172a;font-weight:bold;font-size:13px;border-radius:999px;padding:4px 12px;margin-bottom:10px}
+h1{margin:0;font-size:26px;line-height:1.3}
+header p{margin:8px 0 0;color:#e0e7ff;font-size:14px;max-width:760px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.steps span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);padding:6px 12px;border-radius:999px;font-size:13px}
+main{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+h2{margin:0 0 6px;font-size:19px}
+.sub{margin:0 0 14px;color:var(--mut);font-size:14px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:900px){.grid5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.grid5{grid-template-columns:1fr}}
+.fcard{border:2px solid var(--line);border-radius:14px;padding:12px;background:#fff;cursor:pointer;transition:.15s;position:relative}
+.fcard:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.fcard.sel{border-color:var(--ink);box-shadow:0 0 0 3px #facc15}
+.fcard .icon{font-size:30px}
+.fcard h3{margin:6px 0 4px;font-size:16px}
+.fcard p{margin:4px 0;font-size:13px}
+.fcard .dir{display:inline-block;font-size:12px;background:#0f172a;color:#fff;border-radius:6px;padding:2px 8px;margin:4px 0}
+.fcard .hint{background:#fffbeb;border:1px dashed #f59e0b;border-radius:8px;padding:6px;font-size:12px;margin-top:8px}
+.fcard .usebtn{margin-top:8px;width:100%;border:1px solid #cbd5e1;background:#f8fafc;border-radius:8px;padding:6px;font-size:13px;font-weight:bold}
+.fcard.sel .usebtn{background:#0f172a;color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:800px){.two{grid-template-columns:1fr}}
+.place-row,.target-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid #cbd5e1;background:#f8fafc;border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer}
+.chip.on{background:#0f172a;color:#fff;border-color:#0f172a}
+textarea,input[type=text]{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-size:14px;font-family:inherit}
+textarea{min-height:70px;resize:vertical}
+label.t{font-weight:bold;font-size:14px;display:block;margin:12px 0 6px}
+.roulette{background:linear-gradient(180deg,#eff6ff,#faf5ff);border:2px dashed #7c3aed;border-radius:14px;padding:14px;text-align:center}
+#combo{font-size:18px;font-weight:bold;margin:12px 0;min-height:56px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:12px;border:1px solid var(--line);padding:10px}
+.btn{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:bold;cursor:pointer}
+.btn:hover{background:#f1f5f9}
+.btn.primary{background:var(--p);color:#fff;border-color:var(--p)}
+.btn.dark{background:#0f172a;color:#fff;border-color:#0f172a}
+.btn.yellow{background:#facc15;border-color:#eab308}
+#sketch{width:100%;height:320px;border:2px solid #94a3b8;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair}
+.tool{border:2px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:bold;cursor:pointer}
+.tool.on{background:#0f172a;color:#fff;border-color:#0f172a}
+.fbtn{border:2px solid;border-radius:10px;padding:7px 10px;font-size:13px;font-weight:bold;cursor:pointer;background:#fff}
+.fbtn.on{outline:3px solid #facc15}
+.pbtn{border:1px solid #cbd5e1;background:#f1f5f9;border-radius:10px;padding:7px 10px;font-size:13px;cursor:pointer}
+.toolbar{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;align-items:center}
+.score{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:700px){.score{grid-template-columns:repeat(2,1fr)}}
+.score div{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.score b{font-size:13px}
+.score output{font-size:20px;font-weight:bold;display:block}
+.idea{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fffffe}
+.idea h4{margin:0 0 4px}
+.tag{display:inline-block;font-size:12px;background:#e0e7ff;border-radius:999px;padding:2px 10px;margin:2px}
+.ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:800px){.ex-grid{grid-template-columns:1fr}}
+.ex{border:1px solid var(--line);border-radius:12px;padding:12px;background:#f8fafc;font-size:13px}
+.ex b{font-size:14px}
+footer{max-width:1080px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-size:13px}
+#pitch{background:#0f172a;color:#fff;border-radius:12px;padding:12px;font-size:14px;white-space:pre-line;margin-top:10px}
+@media print{
+ header,.no-print{display:none!important}
+ section{box-shadow:none;break-inside:avoid}
+ body{background:#fff}
+ #printOnly{display:block!important}
+}
+#printOnly{display:none}
+.progress{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:8px 16px;font-size:13px;display:flex;gap:8px;align-items:center}
+.progress a{text-decoration:none;color:var(--p);font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<div class="inner">
+<div class="badge">중학교 1학년 과학 · 여러 가지 힘 프로젝트</div>
+<h1>💡 힘으로 발명하기! 제품·서비스 기획실</h1>
+<p>중력 · 탄성력 · 마찰력 · 부력 · 수직항력(버티는 힘)을 이용해 <b>불편함을 해결하는 발명품</b>을 기획해 보자.<br>과학 원리 → 아이디어 → 설계도 → 30초 발표까지, 이 페이지 하나로 완성!</p>
+<div class="steps"><span>① 힘 복습 5분</span><span>② 불편 찾기 10분</span><span>③ 기획서 쓰기 20분</span><span>④ 별점·발표 10분</span></div>
+</div>
+</header>
+
+<div class="progress no-print">바로가기: <a href="#s1">힘카드</a> · <a href="#s2">불편찾기</a> · <a href="#s3">랜덤조합</a> · <a href="#s4">기획서</a> · <a href="#s5">저장·발표</a> · <a href="#s6">예시</a></div>
+
+<main>
+<!-- 1. 힘 카드 -->
+<section id="s1">
+<h2>① 먼저, 5가지 힘을 복습하자 🔍</h2>
+<p class="sub">카드를 눌러 <b>내 발명에 쓸 힘</b>으로 선택해 보세요. 1~2개를 조합하면 더 참신해져요. 방향과 크기를 바꾸는 게 발명의 핵심!</p>
+<div class="grid5" id="forceGrid"></div>
+<div id="selInfo" style="margin-top:10px;background:#f1f5f9;border-radius:10px;padding:10px;font-size:14px;">선택한 힘: <b id="selText">없음</b></div>
+</section>
+
+<!-- 2. 불편 찾기 -->
+<section id="s2">
+<h2>② 불편함 찾기 — 발명은 불평에서 시작된다 🕵️</h2>
+<p class="sub">장소를 고르면 질문이 나와요. 친구와 이야기하며 <b>진짜 불편</b>을 1개 정해 기획서에 적으세요.</p>
+<div class="two">
+<div>
+<div class="place-row" id="placeRow"></div>
+<div id="placeQ" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px;font-size:14px;">장소를 눌러보세요. 예) “비 오는 날 우산은 왜 자꾸 뒤집힐까? (중력+탄성력+마찰력)”</div>
+</div>
+<div>
+<label class="t" style="margin-top:0">우리 모둠이 해결할 문제 (누가, 언제, 무엇이 불편한가?)</label>
+<textarea id="problem" placeholder="예) 비 오는 날, 자전거를 타는 중학생이 미끄러져서 위험하다. 브레이크 마찰력이 비에 약해지기 때문이다."></textarea>
+<label class="t">누구를 위한 제품/서비스인가?</label>
+<input type="text" id="who" placeholder="예) 비 오는 날 등교하는 중학생, 할머니, 반려동물…">
+</div>
+</div>
+</section>
+
+<!-- 3. 랜덤 조합 -->
+<section id="s3">
+<h2>③ 아이디어가 안 떠오르면? 발명 룰렛 🎰</h2>
+<p class="sub">힘 + 장소 + 대상을 랜덤으로 뽑아 억지로 연결해 보세요. 엉뚱한 조합에서 대박 아이디어가 나옵니다.</p>
+<div class="roulette no-print">
+<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+<button class="btn dark" onclick="spin()">🎲 룰렛 돌리기</button>
+<button class="btn" onclick="spinForce2()">힘 2개만 뽑기</button>
+</div>
+<div id="combo">버튼을 눌러 조합을 뽑아보세요!</div>
+<p style="font-size:13px;color:#475569;margin:0">예) [부력+마찰력] × [수영장] × [핸드폰] → “물에 뜨면서 미끄러지지 않는 폰 케이스”</p>
+</div>
+</section>
+
+<!-- 4. 기획서 -->
+<section id="s4">
+<h2>④ 발명 기획서 쓰기 ✍️</h2>
+<p class="sub">위에서 고른 힘과 문제가 자동 입력됩니다. 스케치는 손가락/마우스로 그려 보세요.</p>
+<label class="t">모둠명 / 이름</label>
+<input type="text" id="team" placeholder="예) 1학년 3반 번개모둠">
+<label class="t">제품·서비스 이름 (기억에 남게!)</label>
+<input type="text" id="pname" placeholder="예) 뒤집히지 않는 무중력 우산, 미끄럼제로 신발커버">
+<div class="two">
+<div>
+<label class="t">어떤 종류인가요?</label>
+<div class="place-row" id="typeRow">
+<button class="chip on" data-v="제품">📦 제품</button>
+<button class="chip" data-v="서비스">🤝 서비스</button>
+<button class="chip" data-v="제품+서비스">📦+🤝 함께</button>
+</div>
+<label class="t">사용하는 힘 (중복 선택, 위 카드와 연동됨)</label>
+<div class="place-row" id="useRow"></div>
+</div>
+<div>
+<label class="t">각 힘은 어떻게 이용되나요? (과학 원리)</label>
+<textarea id="how" placeholder="예) [중력] 우산 중심을 아래로 내려 바람에 안 뒤집히게 / [탄성력] 휘어지는 살대로 바람을 흡수 / [마찰력] 손잡이에 고무로 미끄럼 방지"></textarea>
+</div>
+</div>
+<label class="t">작동 방법 3단계 (사용자가 어떻게 쓰나요?)</label>
+<textarea id="steps3" placeholder="1단계: …  2단계: …  3단계: …"></textarea>
+<label class="t">스케치 / 구조도 — 터치패드 모드: 드래그 없이 두 번 클릭!</label>
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:8px">🖱️ 터치패드 팁: <b>1번째 클릭=시작점, 2번째 클릭=끝점</b>으로 직선·화살표·도형 완성. 자유그리기 없이도 조립+화살표만으로 만점 가능! 선택 후 <b>방향키</b>로 1칸씩 이동.</div>
+<canvas id="sketch"></canvas>
+<div class="toolbar no-print" style="gap:6px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0" id="toolRow">
+<button class="tool on" data-tool="select">⬚ 선택/이동</button>
+<button class="tool" data-tool="pen">✏️ 자유펜</button>
+<button class="tool" data-tool="line">📏 직선(2클릭)</button>
+<button class="tool" data-tool="arrow">➡️ 힘화살표(2클릭)</button>
+<button class="tool" data-tool="rect">▭ 상자</button>
+<button class="tool" data-tool="circle">○ 바퀴/원</button>
+<button class="tool" data-tool="text">🔤 글자</button>
+<button class="tool" data-tool="eraser">🧽 지우개(클릭삭제)</button>
+</div>
+<div style="font-size:13px;font-weight:bold;margin:6px 0">힘 화살표 빠른추가 (누르고 캔버스 2클릭):</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap" id="forceBtns">
+<button class="fbtn" data-f="중력" data-c="#ef4444" style="border-color:#ef4444">🍎 중력 ↓</button>
+<button class="fbtn" data-f="부력" data-c="#3b82f6" style="border-color:#3b82f6">🌊 부력 ↑</button>
+<button class="fbtn" data-f="탄성력" data-c="#22c55e" style="border-color:#22c55e">🏹 탄성력</button>
+<button class="fbtn" data-f="마찰력" data-c="#f59e0b" style="border-color:#f59e0b">🧤 마찰력</button>
+<button class="fbtn" data-f="수직항력" data-c="#7c3aed" style="border-color:#7c3aed">🪑 수직항력</button>
+</div>
+<div style="font-size:13px;font-weight:bold;margin:8px 0 4px">부품 조립 (클릭하면 가운데에 생김 → 선택후 이동):</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap" id="partBtns">
+<button class="pbtn" data-p="box">📦 물체상자</button>
+<button class="pbtn" data-p="wheel">🛞 바퀴</button>
+<button class="pbtn" data-p="spring">🌀 용수철</button>
+<button class="pbtn" data-p="plate">🟫 바닥/판</button>
+<button class="pbtn" data-p="person">🧍 사람</button>
+<button class="pbtn" data-p="balloon">💬 설명말풍선</button>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+<button class="btn" onclick="undoSketch()">↩️ 되돌리기</button>
+<button class="btn" onclick="redoSketch()">↪️ 다시</button>
+<button class="btn" onclick="clearSketch()">🧹 전체지우기</button>
+<button class="btn" onclick="deleteSel()">🗑️ 선택삭제</button>
+<label style="font-size:13px">색: <input type="color" id="penColor" value="#0f172a"></label>
+<label style="font-size:13px">굵기: <input type="range" id="penW" min="1" max="12" value="3" style="width:80px"></label>
+<label style="font-size:13px">글자: <input type="text" id="txtInput" placeholder="예) 미끄럼방지 고무" style="width:160px;display:inline-block"></label>
+<span id="skMsg" style="font-size:13px;color:#0f172a;background:#fef9c3;border-radius:8px;padding:2px 8px">선택/이동 모드</span>
+</div>
+</div>
+<div class="two">
+<div>
+<label class="t">기대 효과</label>
+<textarea id="effect" placeholder="예) 빗길 넘어짐 50% 감소, 우산 수명 2배"></textarea>
+</div>
+<div>
+<label class="t">안전·한계 체크 (반드시 1개 이상!)</label>
+<textarea id="risk" placeholder="예) 한계: 15m/s 강풍엔 안 됨 / 안전: 끝을 둥글게, 형광색으로 밤에도 보이게"></textarea>
+</div>
+</div>
+</section>
+
+<!-- 5. 평가 저장 발표 -->
+<section id="s5">
+<h2>⑤ 별점·저장·30초 발표 🎤</h2>
+<p class="sub">스스로 평가하고 저장하세요. 저장된 아이디어는 이 컴퓨터에 보관되고, 인쇄하면 제출용 보고서가 됩니다.</p>
+<div class="score">
+<div><b>🌟 참신성</b><input type="range" min="1" max="5" value="3" id="sc1" style="width:100%"><output id="o1">3</output></div>
+<div><b>🔬 과학원리</b><input type="range" min="1" max="5" value="3" id="sc2" style="width:100%"><output id="o2">3</output></div>
+<div><b>🛠️ 실용성</b><input type="range" min="1" max="5" value="3" id="sc3" style="width:100%"><output id="o3">3</output></div>
+<div><b>🦺 안전성</b><input type="range" min="1" max="5" value="3" id="sc4" style="width:100%"><output id="o4">3</output></div>
+</div>
+<div style="margin-top:8px;font-size:15px">총점: <b id="total">12 / 20</b> <span id="grade" style="background:#facc15;border-radius:8px;padding:2px 10px;">도전!</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px" class="no-print">
+<button class="btn primary" onclick="saveIdea()">💾 내 아이디어 저장</button>
+<button class="btn dark" onclick="makePitch()">🎤 30초 발표 대본 만들기</button>
+<button class="btn yellow" onclick="window.print()">🖨️ 보고서 인쇄 / PDF</button>
+<button class="btn" onclick="clearAll()">🗑️ 전체 삭제</button>
+</div>
+<div id="pitch">발표 대본 버튼을 누르면 여기에 30초 대본이 만들어져요.</div>
+<h3 style="margin:14px 0 4px">📚 우리 반 아이디어 목록 (<span id="cnt">0</span>)</h3>
+<div id="list"><p style="color:#64748b;font-size:14px">아직 저장된 아이디어가 없어요. 첫 번째 발명가가 되어 보세요!</p></div>
+<div id="printOnly">
+<h2>힘으로 발명하기 — 제출용 보고서</h2>
+<div id="printBody"></div>
+</div>
+</section>
+
+<!-- 6. 예시 -->
+<section id="s6">
+<h2>⑥ 막막하면? 선배들의 예시 엿보기 👀</h2>
+<p class="sub">그대로 베끼지 말고, <b>힘 바꾸기·장소 바꾸기·대상 바꾸기</b>로 변형해 보세요.</p>
+<div class="ex-grid">
+<div class="ex"><b>🧲 중력 — 넘어지지 않는 텀블러</b><br>밑에 무거운 추 + 둥근 바닥. 중력 중심이 항상 아래로! 급식실 엎지름 해결.<br><span class="tag">중력</span><span class="tag">수직항력</span></div>
+<div class="ex"><b>🏹 탄성력 — 책가방 어깨통증 제로 서스펜션</b><br>어깨끈에 고탄성 밴드. 걸을 때 충격을 탄성력이 흡수.<br><span class="tag">탄성력</span><span class="tag">중력</span></div>
+<div class="ex"><b>🧤 마찰력 — 빗길 미끄럼제로 신발커버</b><br>밑면에 실리콘 돌기+물빠짐 홈. 마찰력 ↑, 수막현상 ↓.<br><span class="tag">마찰력</span><span class="tag">수직항력</span></div>
+<div class="ex"><b>🌊 부력 — 물에 뜨는 분실방지 수영안경</b><br>테에 공기주머니. 부력>중력이라 물에 둥둥. 형광색 서비스 포함.<br><span class="tag">부력</span><span class="tag">중력</span></div>
+<div class="ex"><b>🪑 수직항력 — 흔들리지 않는 3다리 의자쿠션</b><br>울퉁불퉁한 운동장 바닥에서도 3점이 버텨 수직항력 균형!<br><span class="tag">수직항력</span><span class="tag">마찰력</span></div>
+<div class="ex"><b>🪂 종합 — 낙하산 분리형 반려동물 배낭</b><br>무거우면 탄성밴드가 늘어나 경고, 미끄럼방지+통풍 서비스 결합.<br><span class="tag">중력</span><span class="tag">탄성력</span><span class="tag">마찰력</span></div>
+</div>
+<p style="font-size:13px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px">💡 변형 공식: <b>힘 바꾸기</b>(마찰→탄성?) + <b>장소 바꾸기</b>(수영장→욕실?) + <b>대상 바꾸기</b>(사람→반려동물?) + <b>역발상</b>(미끄럽게? 가볍게?)</p>
+</section>
+</main>
+
+<footer>선생님용: 45분 기준 ①도입(힘카드 퀴즈) 5′ ②모둠 불편찾기 10′ ③룰렛+기획서 20′ ④별점+30초 발표 10′ · 평가: 과학원리 정확성(힘 방향·평형 언급) + 창의·안전. 이 파일은 인터넷 없이 실행되는 단일 HTML입니다.</footer>
+
+<script>
+const FORCES=[
+{id:'gravity',icon:'🍎',name:'중력',color:'#ef4444',dir:'방향: 항상 아래',def:'지구가 물체를 끌어당기는 힘. 질량이 클수록 크다.',ex:'낙하, 시소, 텀블러의 추',q:'무거움을 줄일까? 이용할까? 중심을 낮추면?'},
+{id:'elastic',icon:'🏹',name:'탄성력',color:'#22c55e',dir:'방향: 변형 반대',def:'고무·용수철이 원래 모양으로 돌아가려는 힘.',ex:'고무줄, 트램펄린, 어깨끈',q:'늘어났다 줄었다를 어디에? 충격 흡수? 발사? 고정?'},
+{id:'friction',icon:'🧤',name:'마찰력',color:'#f59e0b',dir:'방향: 운동 반대',def:'면이 맞닿아 미끄러짐을 방해하는 힘. 거칠수록 크다.',ex:'브레이크, 운동화 밑창',q:'미끄럽게? 미끄럽지 않게? 홈·재질로 조절?'},
+{id:'buoy',icon:'🌊',name:'부력',color:'#3b82f6',dir:'방향: 항상 위',def:'물·공기가 물체를 위로 밀어 올리는 힘.',ex:'수영, 배, 튜브',q:'뜨게 할까? 가라앉게 할까? 공기를 넣으면?'},
+{id:'normal',icon:'🪑',name:'수직항력',color:'#7c3aed',dir:'방향: 면에 수직',def:'단단한 면이 물체를 버티며 밀어내는 힘. 중력과 평형!',ex:'책상 위 책, 바닥, 의자',q:'어디서 버틸까? 면을 넓히면? 다리를 몇 개로?'}
+];
+let selected=new Set();
+const grid=document.getElementById('forceGrid');
+function renderForces(){
+ grid.innerHTML='';
+ FORCES.forEach(f=>{
+  const d=document.createElement('div');
+  d.className='fcard'+(selected.has(f.id)?' sel':'');
+  d.style.borderTop='6px solid '+f.color;
+  d.innerHTML=`<div class="icon">${f.icon}</div><h3>${f.name}</h3><span class="dir">${f.dir}</span><p>${f.def}</p><p style="color:#475569">예) ${f.ex}</p><div class="hint">💡 ${f.q}</div><button class="usebtn">${selected.has(f.id)?'✓ 선택됨':'내 발명에 쓰기'}</button>`;
+  d.onclick=()=>{selected.has(f.id)?selected.delete(f.id):selected.add(f.id);renderForces();renderUse();};
+  grid.appendChild(d);
+ });
+ document.getElementById('selText').textContent=selected.size?[...selected].map(id=>FORCES.find(f=>f.id===id).name).join(' + '):'없음';
+}
+const PLACES={
+ '🏫 학교':['복도에서 뛰다 미끄러진다 — 마찰력을 어떻게 키울까?','무거운 책가방 — 중력을 덜 느끼게 할 수 있을까?','의자가 흔들린다 — 수직항력을 고르게 할 수 있을까?'],
+ '🏠 집':['욕실 바닥이 미끄럽다 — 마찰력+물빠짐?','문이 쾅 닫힌다 — 탄성력으로 부드럽게?','냄비 뚜껑이 뜨거워 못 잡는다 — ?'],
+ '🌧️ 비·겨울':['우산이 뒤집힌다 — 바람 vs 탄성력?','빗길 자전거 브레이크가 안 듣는다 — ?','장갑 낀 손에 폰이 미끄러진다 — ?'],
+ '🏊 물놀이':['수영안경·스노클이 가라앉아 잃어버린다 — 부력?','풀장 입구가 미끄럽다 — 마찰력?','튜브가 바람에 떠내려간다 — ?'],
+ '⚽ 운동':['축구화 끈이 풀린다 — 마찰력 vs 탄성력?','넘어질 때 충격이 크다 — 탄성력으로 흡수?','물통이 가방에서 쏟아진다 — ?'],
+ '🐶 일상+펫':['반려견 목줄이 갑자기 당겨진다 — 탄성력?','사료그릇이 밀려다닌다 — 마찰력+수직항력?','장난감이 물에 가라앉는다 — 부력?']
+};
+const placeRow=document.getElementById('placeRow');
+Object.keys(PLACES).forEach((p,i)=>{
+ const b=document.createElement('button');b.className='chip'+(i===0?' on':'');b.textContent=p;
+ b.onclick=()=>{[...placeRow.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');
+  const qs=PLACES[p];document.getElementById('placeQ').innerHTML='❓ <b>'+p+'</b><br>· '+qs.join('<br>· ');};
+ placeRow.appendChild(b);
+});
+document.getElementById('placeQ').innerHTML='❓ <b>🏫 학교</b><br>· '+PLACES['🏫 학교'].join('<br>· ');
+
+// 종류 선택
+let ptype='제품';
+document.querySelectorAll('#typeRow .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#typeRow .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');ptype=c.dataset.v;});
+// 사용할 힘
+const useRow=document.getElementById('useRow');
+function renderUse(){
+ useRow.innerHTML='';
+ FORCES.forEach(f=>{
+  const b=document.createElement('button');b.className='chip'+(selected.has(f.id)?' on':'');b.textContent=f.icon+' '+f.name;
+  b.onclick=()=>{selected.has(f.id)?selected.delete(f.id):selected.add(f.id);renderForces();renderUse();};
+  useRow.appendChild(b);
+ });
+}
+renderForces();renderUse();
+
+// 룰렛
+const TARGETS=['중학생','할머니','유아','반려견','운동선수','자전거','핸드폰','우산','책가방','신발','물통','안경'];
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function spin(){
+ const f1=pick(FORCES),let2=pick(FORCES.filter(f=>f.id!==f1.id));
+ const p=pick(Object.keys(PLACES)),t=pick(TARGETS);
+ document.getElementById('combo').textContent=`[${f1.name} + ${let2.name}] × [${p}] × [${t}] → 어떤 발명?`;
+}
+function spinForce2(){
+ const f1=pick(FORCES);let f2=pick(FORCES.filter(f=>f.id!==f1.id));
+ selected=new Set([f1.id,f2.id]);renderForces();renderUse();
+ document.getElementById('combo').textContent=`힘 2개 선택됨: ${f1.name} + ${f2.name} — 기획서에 자동 입력됐어요!`;
+}
+
+// 스케치 — 터치패드 친화형 (2클릭 완성 + 조립식)
+const cv=document.getElementById('sketch'),ctx=cv.getContext('2d');
+let shapes=[],selIdx=-1,tool='select',pending=null,preview=null,penDrag=null,moveDrag=null;
+let undoSt=[],redoSt=[],arrowColor='#ef4444',arrowLabel='중력';
+function S2W(){return 2;}
+function fit(){const w=cv.clientWidth||600;cv.width=w*2;cv.height=320*2;redraw();}
+fit();window.addEventListener('resize',fit);
+function pushUndo(){undoSt.push(JSON.stringify({shapes,selIdx}));if(undoSt.length>60)undoSt.shift();redoSt=[];}
+function undoSketch(){if(!undoSt.length)return;redoSt.push(JSON.stringify({shapes,selIdx}));const s=JSON.parse(undoSt.pop());shapes=s.shapes;selIdx=s.selIdx;pending=null;preview=null;redraw();}
+function redoSketch(){if(!redoSt.length)return;undoSt.push(JSON.stringify({shapes,selIdx}));const s=JSON.parse(redoSt.pop());shapes=s.shapes;selIdx=s.selIdx;redraw();}
+function clearSketch(){if(!shapes.length)return;pushUndo();shapes=[];selIdx=-1;pending=null;preview=null;redraw();}
+function deleteSel(){if(selIdx<0)return;pushUndo();shapes.splice(selIdx,1);selIdx=-1;redraw();}
+function toC(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*2,y:(e.clientY-r.top)*2};}
+function msg(t){document.getElementById('skMsg').textContent=t;}
+document.querySelectorAll('#toolRow .tool').forEach(b=>b.onclick=()=>{tool=b.dataset.tool;document.querySelectorAll('#toolRow .tool').forEach(x=>x.classList.toggle('on',x===b));pending=null;preview=null;msg(b.textContent+' 모드'+((tool==='line'||tool==='arrow'||tool==='rect'||tool==='circle')?' — 시작점 클릭→끝점 클릭':''));cv.style.cursor=tool==='select'?'default':'crosshair';});
+document.querySelectorAll('#forceBtns .fbtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('#forceBtns .fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');arrowColor=b.dataset.c;arrowLabel=b.dataset.f;tool='arrow';document.querySelectorAll('#toolRow .tool').forEach(x=>x.classList.toggle('on',x.dataset.tool==='arrow'));pending=null;msg(arrowLabel+' 화살표 — 시작점 클릭→끝점 클릭!');});
+document.querySelectorAll('#partBtns .pbtn').forEach(b=>b.onclick=()=>{pushUndo();const cx=cv.width/2,cy=cv.height/2;const k=b.dataset.p;let s={type:'part',kind:k,x:cx-80,y:cy-60,w:160,h:120,color:'#0f172a'};
+if(k==='wheel')s={type:'part',kind:k,x:cx-60,y:cy-60,w:120,h:120,color:'#0f172a'};
+if(k==='spring')s={type:'part',kind:k,x:cx-100,y:cy-30,w:200,h:60,color:'#0f172a'};
+if(k==='plate')s={type:'part',kind:k,x:cx-160,y:cy+40,w:320,h:28,color:'#92400e'};
+if(k==='person')s={type:'part',kind:k,x:cx-50,y:cy-90,w:100,h:180,color:'#0f172a'};
+if(k==='balloon')s={type:'text',x:cx-100,y:cy-40,text:document.getElementById('txtInput').value||'설명 쓰기',color:'#0f172a',size:30};
+shapes.push(s);selIdx=shapes.length-1;redraw();msg('부품 추가됨 — 선택모드에서 클릭+방향키로 이동');});
+function distToSeg(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1;const L2=dx*dx+dy*dy||1;let t=((px-x1)*dx+(py-y1)*dy)/L2;t=Math.max(0,Math.min(1,t));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));}
+function hit(i,p){const s=shapes[i];if(!s)return false;
+if(s.type==='pen')return s.pts.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<20);
+if(s.type==='line'||s.type==='arrow')return distToSeg(p.x,p.y,s.x1,s.y1,s.x2,s.y2)<24;
+if(s.type==='rect'||s.type==='circle')return p.x>=s.x1-10&&p.x<=s.x2+10&&p.y>=s.y1-10&&p.y<=s.y2+10;
+if(s.type==='part')return p.x>=s.x-10&&p.x<=s.x+s.w+10&&p.y>=s.y-10&&p.y<=s.y+s.h+10;
+if(s.type==='text')return Math.abs(p.x-s.x)<160&&Math.abs(p.y-s.y)<50;return false;}
+function normBox(a,b){return {x1:Math.min(a.x,b.x),y1:Math.min(a.y,b.y),x2:Math.max(a.x,b.x),y2:Math.max(a.y,b.y)};}
+cv.addEventListener('pointerdown',e=>{e.preventDefault();const p=toC(e);cv.setPointerCapture(e.pointerId);
+if(tool==='select'){for(let i=shapes.length-1;i>=0;i--){if(hit(i,p)){selIdx=i;const s=shapes[i];let ox,oy;if(s.x!==undefined){ox=p.x-s.x;oy=p.y-s.y;}else{ox=p.x-(s.x1||0);oy=p.y-(s.y1||0);}moveDrag={ox,oy};redraw();return;}}selIdx=-1;redraw();return;}
+if(tool==='eraser'){for(let i=shapes.length-1;i>=0;i--){if(hit(i,p)){pushUndo();shapes.splice(i,1);selIdx=-1;redraw();return;}}return;}
+if(tool==='pen'){pushUndo();penDrag={pts:[p],color:document.getElementById('penColor').value,w:+document.getElementById('penW').value*2};return;}
+if(tool==='text'){pushUndo();shapes.push({type:'text',x:p.x-20,y:p.y,text:document.getElementById('txtInput').value||'여기에 설명',color:document.getElementById('penColor').value,size:30});selIdx=shapes.length-1;redraw();return;}
+if(!pending){pending=p;preview=p;msg('시작점 저장! 끝날 곳을 한 번 더 클릭하세요 (ESC 취소)');}else{pushUndo();const a=pending,b=p;const col=tool==='arrow'?arrowColor:document.getElementById('penColor').value;const w=+document.getElementById('penW').value*2;
+if(tool==='line')shapes.push({type:'line',x1:a.x,y1:a.y,x2:b.x,y2:b.y,color:col,w});
+else if(tool==='arrow')shapes.push({type:'arrow',x1:a.x,y1:a.y,x2:b.x,y2:b.y,color:col,w:w+2,label:arrowLabel});
+else if(tool==='rect'){const n=normBox(a,b);shapes.push({type:'rect',...n,color:col,w});}
+else if(tool==='circle'){const n=normBox(a,b);shapes.push({type:'circle',...n,color:col,w});}
+selIdx=shapes.length-1;pending=null;preview=null;redraw();msg('완성! 또 그리려면 다시 2클릭');}
+});
+cv.addEventListener('pointermove',e=>{const p=toC(e);
+if(penDrag){penDrag.pts.push(p);redraw();drawPen(penDrag);return;}
+if(moveDrag&&selIdx>=0&&e.buttons){const s=shapes[selIdx];const nx=p.x-moveDrag.ox,ny=p.y-moveDrag.oy;
+if(s.x!==undefined){s.x=nx;s.y=ny;}else{const w=(s.x2-s.x1),h=(s.y2-s.y1);s.x1=nx;s.y1=ny;s.x2=nx+w;s.y2=ny+h;if(s.type==='line'||s.type==='arrow'){const dx=s.x2-s.x1,dy=s.y2-s.y1;s.x1=nx;s.y1=ny;s.x2=nx+dx;s.y2=ny+dy;}}redraw();return;}
+if(pending&&(tool==='line'||tool==='arrow'||tool==='rect'||tool==='circle')){preview=p;redraw();}});
+window.addEventListener('pointerup',()=>{if(penDrag){shapes.push({type:'pen',...penDrag});selIdx=shapes.length-1;penDrag=null;redraw();}moveDrag=null;});
+window.addEventListener('keydown',e=>{
+if(e.key==='Escape'){pending=null;preview=null;redraw();}
+if(e.key==='Delete'||e.key==='Backspace'){if(document.activeElement.tagName!=='TEXTAREA'&&document.activeElement.tagName!=='INPUT')deleteSel();}
+if(selIdx>=0&&e.key.startsWith('Arrow')){e.preventDefault();const d=e.shiftKey?20:6;const s=shapes[selIdx];const dx=e.key==='ArrowLeft'?-d:e.key==='ArrowRight'?d:0;const dy=e.key==='ArrowUp'?-d:e.key==='ArrowDown'?d:0;
+if(s.x!==undefined){s.x+=dx;s.y+=dy;}else if(s.pts){s.pts=s.pts.map(q=>({x:q.x+dx,y:q.y+dy}));}else{s.x1+=dx;s.y1+=dy;s.x2+=dx;s.y2+=dy;}redraw();}
+});
+function drawArrow(x1,y1,x2,y2,color,w){ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();const a=Math.atan2(y2-y1,x2-x1);const h=18+w;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-h*Math.cos(a-0.4),y2-h*Math.sin(a-0.4));ctx.lineTo(x2-h*Math.cos(a+0.4),y2-h*Math.sin(a+0.4));ctx.closePath();ctx.fill();ctx.restore();}
+function drawPen(s){ctx.save();ctx.strokeStyle=s.color;ctx.lineWidth=s.w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();s.pts.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.stroke();ctx.restore();}
+function drawShape(s,isSel){ctx.save();
+if(isSel){ctx.shadowColor='#facc15';ctx.shadowBlur=12;}
+if(s.type==='pen')drawPen(s);
+else if(s.type==='line'){ctx.strokeStyle=s.color;ctx.lineWidth=s.w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();}
+else if(s.type==='arrow'){drawArrow(s.x1,s.y1,s.x2,s.y2,s.color,s.w);const mx=(s.x1+s.x2)/2,my=(s.y1+s.y2)/2;ctx.font='bold 26px Malgun Gothic';ctx.lineWidth=6;ctx.strokeStyle='#fff';const lb=s.label||'';if(lb){ctx.strokeText(lb,mx+10,my-10);ctx.fillStyle=s.color;ctx.fillText(lb,mx+10,my-10);}}
+else if(s.type==='rect'){ctx.strokeStyle=s.color;ctx.lineWidth=s.w;ctx.strokeRect(s.x1,s.y1,s.x2-s.x1,s.y2-s.y1);}
+else if(s.type==='circle'){ctx.strokeStyle=s.color;ctx.lineWidth=s.w;ctx.beginPath();ctx.ellipse((s.x1+s.x2)/2,(s.y1+s.y2)/2,Math.abs(s.x2-s.x1)/2,Math.abs(s.y2-s.y1)/2,0,0,Math.PI*2);ctx.stroke();}
+else if(s.type==='text'){ctx.font=`bold ${s.size}px Malgun Gothic`;ctx.lineWidth=5;ctx.strokeStyle='#fff';ctx.strokeText(s.text,s.x,s.y);ctx.fillStyle=s.color;ctx.fillText(s.text,s.x,s.y);}
+else if(s.type==='part'){drawPart(s);}
+if(isSel){ctx.restore();ctx.save();ctx.setLineDash([10,6]);ctx.strokeStyle='#0f172a';ctx.lineWidth=3;const b=bbox(s);if(b)ctx.strokeRect(b.x-6,b.y-6,b.w+12,b.h+12);}
+ctx.restore();}
+function bbox(s){if(s.x!==undefined)return {x:s.x,y:s.y,w:s.w,h:s.h};if(s.x1!==undefined)return {x:Math.min(s.x1,s.x2),y:Math.min(s.y1,s.y2),w:Math.abs(s.x2-s.x1),h:Math.abs(s.y2-s.y1)};if(s.pts&&s.pts.length){const xs=s.pts.map(q=>q.x),ys=s.pts.map(q=>q.y);return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};}return null;}
+function drawPart(s){const {x,y,w,h}=s;ctx.strokeStyle=(s.color||'#0f172a');ctx.fillStyle='#fff';ctx.lineWidth=5;
+if(s.kind==='box'){ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);ctx.font='bold 28px Malgun Gothic';ctx.fillStyle='#0f172a';ctx.fillText('물체',x+w/2-36,y+h/2+10);}
+else if(s.kind==='wheel'){ctx.beginPath();ctx.arc(x+w/2,y+h/2,w/2-4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(x+w/2,y+h/2,8,0,Math.PI*2);ctx.fillStyle='#0f172a';ctx.fill();}
+else if(s.kind==='spring'){ctx.beginPath();const n=8;for(let i=0;i<=n;i++){const px=x+(w/n)*i;const py=y+h/2+((i%2)?-h/2:h/2);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();}
+else if(s.kind==='plate'){ctx.fillStyle='#d6a05c';ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);}
+else if(s.kind==='person'){ctx.beginPath();ctx.arc(x+w/2,y+28,22,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x+w/2,y+50);ctx.lineTo(x+w/2,y+110);ctx.moveTo(x+10,y+75);ctx.lineTo(x+w-10,y+75);ctx.moveTo(x+w/2,y+110);ctx.lineTo(x+15,y+h);ctx.moveTo(x+w/2,y+110);ctx.lineTo(x+w-15,y+h);ctx.stroke();}
+}
+function redraw(){ctx.clearRect(0,0,cv.width,cv.height);ctx.save();ctx.strokeStyle='#e2e8f0';ctx.lineWidth=2;for(let x=0;x<cv.width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();}for(let y=0;y<cv.height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();}ctx.restore();
+shapes.forEach((s,i)=>drawShape(s,i===selIdx));
+if(pending&&preview){ctx.save();ctx.setLineDash([12,8]);ctx.lineWidth=5;
+if(tool==='arrow'){ctx.strokeStyle=arrowColor;drawArrow(pending.x,pending.y,preview.x,preview.y,arrowColor,6);}
+else if(tool==='line'){ctx.strokeStyle='#0f172a';ctx.beginPath();ctx.moveTo(pending.x,pending.y);ctx.lineTo(preview.x,preview.y);ctx.stroke();}
+else if(tool==='rect'||tool==='circle'){ctx.strokeStyle='#0f172a';const n=normBox(pending,preview);if(tool==='rect')ctx.strokeRect(n.x1,n.y1,n.x2-n.x1,n.y2-n.y1);else{ctx.beginPath();ctx.ellipse((n.x1+n.x2)/2,(n.y1+n.y2)/2,Math.abs(n.x2-n.x1)/2,Math.abs(n.y2-n.y1)/2,0,0,Math.PI*2);ctx.stroke();}}
+ctx.restore();ctx.fillStyle='#0f172a';ctx.beginPath();ctx.arc(pending.x,pending.y,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 20px sans-serif';ctx.fillText('1',pending.x-7,pending.y+7);}
+}
+
+// 별점
+['sc1','sc2','sc3','sc4'].forEach((id,i)=>{
+ document.getElementById(id).addEventListener('input',e=>{
+  document.getElementById('o'+(i+1)).textContent=e.target.value;calc();
+ });
+});
+function calc(){
+ const s=[+sc1.value,+sc2.value,+sc3.value,+sc4.value];const t=s.reduce((a,b)=>a+b,0);
+ document.getElementById('total').textContent=t+' / 20';
+ const g=t>=18?'🏆 대상감!':t>=15?'🌟 우수!':t>=12?'👍 굿!':'💪 도전!';
+ document.getElementById('grade').textContent=g;return t;
+}
+
+// 저장
+function getIdea(){
+ return {team:team.value,pname:pname.value,ptype,forces:[...selected].map(id=>FORCES.find(f=>f.id===id).name),
+ problem:problem.value,who:who.value,how:how.value,steps:steps3.value,effect:effect.value,risk:risk.value,
+ scores:[sc1.value,sc2.value,sc3.value,sc4.value],total:calc(),date:new Date().toLocaleString(),
+ sketch:JSON.stringify(shapes)};
+}
+function load(){try{return JSON.parse(localStorage.getItem('forceIdeas')||'[]')}catch{return []}}
+function saveIdea(){
+ const v=getIdea();
+ if(!v.pname||!v.problem){alert('제품 이름과 해결할 문제는 꼭 적어주세요!');return;}
+ const arr=load();arr.unshift(v);localStorage.setItem('forceIdeas',JSON.stringify(arr));renderList();
+ alert('저장됐어요! 목록에서 확인하세요.');
+}
+function renderList(){
+ const arr=load();document.getElementById('cnt').textContent=arr.length;
+ const list=document.getElementById('list');
+ if(!arr.length){list.innerHTML='<p style="color:#64748b;font-size:14px">아직 저장된 아이디어가 없어요.</p>';return;}
+ list.innerHTML='';
+ arr.forEach((v,i)=>{
+  const d=document.createElement('div');d.className='idea';
+  d.innerHTML=`<h4>${i+1}. ${esc(v.pname)} <span style="font-size:12px;color:#64748b">${esc(v.ptype)} · ${v.total}/20점</span></h4>
+  <div>${v.forces.map(f=>`<span class="tag">${esc(f)}</span>`).join('')}</div>
+  <p style="font-size:13px;margin:6px 0"><b>문제:</b> ${esc(v.problem)}<br><b>원리:</b> ${esc(v.how)}<br><b>효과:</b> ${esc(v.effect)}</p>
+  <div class="no-print"><button class="btn" onclick="loadIdea(${i})">📥 불러오기</button> <button class="btn" onclick="delIdea(${i})">삭제</button></div>`;
+  list.appendChild(d);
+ });
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function delIdea(i){const a=load();a.splice(i,1);localStorage.setItem('forceIdeas',JSON.stringify(a));renderList();}
+function loadIdea(i){const v=load()[i];if(!v)return;team.value=v.team;pname.value=v.pname;problem.value=v.problem;who.value=v.who;how.value=v.how;steps3.value=v.steps;effect.value=v.effect;risk.value=v.risk;
+if(v.sketch){try{shapes=JSON.parse(v.sketch);selIdx=-1;redraw();}catch(e){}}
+window.scrollTo({top:document.getElementById('s4').offsetTop-10,behavior:'smooth'});}
+function clearAll(){if(confirm('저장된 아이디어를 모두 지울까요?')){localStorage.removeItem('forceIdeas');renderList();}}
+function makePitch(){
+ const v=getIdea();
+ const t=`안녕하세요, ${v.team||'우리 모둠'}입니다!\n${v.who||'사용자'}의 불편, "${v.problem||'문제'}"를 해결하기 위해 "${v.ptype||'제품'} ${v.pname||'OOO'}"을 만들었습니다.\n핵심 원리는 ${(v.forces.join(', ')||'여러 힘')}입니다. ${v.how||''}\n사용법: ${v.steps||'3단계'}\n기대 효과 ${v.effect||''} / 안전 보완 ${v.risk||''}\n이상 30초 발표였습니다. 감사합니다!`;
+ document.getElementById('pitch').textContent=t;
+ const sketchImg=shapes.length?`<p><b>스케치:</b><br><img src="${cv.toDataURL()}" style="max-width:100%;border:1px solid #ccc;border-radius:8px"></p>`:'';
+ document.getElementById('printBody').innerHTML=`<p><b>모둠:</b> ${esc(v.team)} / <b>제품명:</b> ${esc(v.pname)} (${esc(v.ptype)}) / <b>힘:</b> ${esc(v.forces.join('+'))} / <b>점수:</b> ${v.total}/20</p><p><b>문제:</b> ${esc(v.problem)} (대상: ${esc(v.who)})</p><p><b>원리:</b> ${esc(v.how)}</p><p><b>사용법:</b> ${esc(v.steps)}</p><p><b>효과:</b> ${esc(v.effect)}</p><p><b>안전·한계:</b> ${esc(v.risk)}</p>${sketchImg}<p><b>발표:</b><br>${esc(t).replaceAll('\n','<br>')}</p>`;
+}
+renderList();calc();
+</script>
+</body>
+</html>
