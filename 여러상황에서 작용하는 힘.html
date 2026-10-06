@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중1 힘의 화살표 시뮬레이션 - 중력·수직항력·탄성력·마찰력·부력</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Malgun Gothic', sans-serif; margin:0; background:#f1f5f9; color:#1e293b; }
+  header { background:#0f172a; color:#fff; padding:14px 20px; }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:4px 0 0; font-size:13px; color:#cbd5e1; }
+  .wrap { display:flex; gap:16px; padding:16px; max-width:1200px; margin:0 auto; flex-wrap:wrap; }
+  .stage-box { flex:1.4; min-width:340px; background:#fff; border-radius:12px; padding:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .panel { flex:1; min-width:320px; background:#fff; border-radius:12px; padding:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); max-height:90vh; overflow:auto; }
+  #stage { position:relative; width:100%; height:460px; border-radius:10px; overflow:hidden; border:2px dashed #94a3b8; background:#e2e8f0; }
+  #bgLayer { position:absolute; inset:0; background-size:contain; background-position:center; background-repeat:no-repeat; opacity:1; }
+  #bgPlaceholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:#64748b; font-size:14px; padding:20px; pointer-events:none; }
+  #arrowSvg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  #obj { position:absolute; width:28px; height:28px; left:50%; top:50%; transform:translate(-50%,-50%); background:#dc2626; border:3px solid #fff; border-radius:50%; cursor:move; user-select:none; box-shadow:0 0 0 2px #dc2626, 0 2px 8px rgba(0,0,0,.5); z-index:5; }
+  #obj::after { content:'작용점'; position:absolute; top:30px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; font-size:11px; padding:2px 6px; border-radius:6px; white-space:nowrap; }
+  #objCross { position:absolute; inset:0; pointer-events:none; }
+  .state-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0; font-size:14px; }
+  .state-btn { padding:8px 14px; font-weight:bold; }
+  .state-btn.sel { background:#0f172a; color:#fff; border-color:#0f172a; }
+  @media print {
+    body > *:not(#printArea) { display:none !important; }
+    #printArea { display:block !important; }
+  }
+  #printArea { display:none; }
+  .force-card { border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px; }
+  .force-card h3 { margin:0 0 6px; font-size:15px; display:flex; align-items:center; gap:8px; }
+  .dot { width:14px; height:14px; border-radius:50%; display:inline-block; }
+  .row { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; }
+  .row label { width:64px; flex-shrink:0; }
+  input[type=range] { flex:1; }
+  input[type=number] { width:64px; }
+  button { cursor:pointer; border:1px solid #cbd5e1; background:#f8fafc; border-radius:8px; padding:6px 10px; font-size:13px; }
+  button:hover { background:#e2e8f0; }
+  button.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+  button.dir-btn { padding:4px 8px; }
+  button.active-dir { background:#0f172a; color:#fff; }
+  .preset-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  #statusBox { border-radius:10px; padding:10px; font-size:14px; margin-top:10px; }
+  .eq { background:#dcfce7; border:1px solid #22c55e; }
+  .mv { background:#fef9c3; border:1px solid #eab308; }
+  .paste-hint { background:#eff6ff; border:1px dashed #3b82f6; border-radius:10px; padding:8px; font-size:13px; margin-bottom:10px; }
+  .legend { font-size:12px; color:#475569; }
+  .fixed-tag { font-size:11px; background:#0f172a; color:#fff; border-radius:6px; padding:2px 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔬 중1 과학: 힘의 화살표 시뮬레이션</h1>
+  <p>중력 · 수직항력 · 탄성력 · 마찰력 · 부력 — 한 물체에 작용하는 힘을 화살표로 표시 | 정적평형 vs 운동상태</p>
+</header>
+
+<div class="wrap">
+  <div class="stage-box">
+    <div class="paste-hint">📷 <b>사진 배경 넣기:</b> 인터넷/탐구 사진 <b>복사(Ctrl+C)</b> 후 <b>여기 클릭 → Ctrl+V 붙여넣기</b>! 드래그-드롭, 파일 선택도 가능.<br>예) 책상 위 물체, 물에 뜬 공, 빗면 사진</div>
+    <div id="stage" tabindex="0">
+      <div id="bgLayer"></div>
+      <div id="bgPlaceholder">배경 없음<br>이 박스를 클릭하고 Ctrl+V를 눌러<br>사진을 붙여넣어 보세요</div>
+      <svg id="arrowSvg"></svg>
+      <div id="obj" title="드래그해서 배경 속 물체 위로 옮기세요"></div>
+    </div>
+    <div class="state-row">
+      <span>📌 상황 선택:</span>
+      <button class="state-btn sel" id="stStop">🧍 정지 상태</button>
+      <button class="state-btn" id="stMove">🏃 움직이는 상태</button>
+      <span class="legend">← 선택하면 파일 이름에 자동 포함</span>
+    </div>
+    <div class="preset-row">
+      <span class="legend">💡 예시 불러오기:</span>
+      <button data-preset="desk">📚 예시: 책상 위 정지</button>
+      <button data-preset="float">🌊 예시: 물에 뜸(평형)</button>
+      <button data-preset="push">➡️ 예시: 밀어서 움직임</button>
+      <button data-preset="fall">⬇️ 예시: 자유낙하</button>
+      <button id="resetObj">🎯 작용점 중앙으로</button>
+    </div>
+    <div class="preset-row">
+      <button class="primary" id="pngBtn">🖼️ 그림파일(PNG)로 저장</button>
+      <button class="primary" id="pdfBtn">📄 PDF로 저장(인쇄)</button>
+    </div>
+    <div id="printArea"></div>
+    <div class="row" style="margin-top:10px;">
+      <label>배경 사진</label>
+      <input type="file" id="fileInput" accept="image/*">
+      <button id="clearBg">배경 지우기</button>
+    </div>
+    <div class="legend" style="margin-top:10px;">🖼️ 첨부한 사진은 자동으로 창에 다 보이게 표시됩니다.</div>
+    <div class="row">
+      <label>화살표 배율</label>
+      <input type="range" id="scale" min="1" max="8" value="4">
+      <span id="scaleVal">4 px/N</span>
+      <label style="width:auto;"><input type="checkbox" id="showNet" checked> 합력</label>
+      <label style="width:auto;"><input type="checkbox" id="showLabel" checked> 숫자</label>
+      <label style="width:auto;"><input type="checkbox" id="spread" checked> 겹침펼치기</label>
+    </div>
+    <div id="statusBox" class="eq">상태를 계산 중…</div>
+    <p class="legend">✔️ 빨간 점(작용점)을 배경 사진 속 물체 위로 드래그하세요. 모든 화살표는 작용점에서 시작합니다.<br>
+    ✔️ 중력 방향은 <b>아래 고정</b>, 부력 방향은 <b>위 고정</b>. 합력 ≈ 0이면 <b>정적평형</b>.</p>
+  </div>
+
+  <div class="panel">
+    <h2 style="font-size:16px;margin:4px 0 10px;">🎛️ 각 힘의 크기와 방향 조절</h2>
+
+    <div class="force-card" style="border-left:6px solid #ef4444;">
+      <h3><span class="dot" style="background:#ef4444;"></span> 중력 <span class="fixed-tag">방향: 아래 고정</span></h3>
+      <div class="row"><label><input type="checkbox" id="on_g" checked> 켜기</label></div>
+      <div class="row"><label>크기 (N)</label><input type="range" id="mag_g" min="0" max="50" value="20"><input type="number" id="num_g" min="0" max="50" value="20"></div>
+    </div>
+
+    <div class="force-card" style="border-left:6px solid #ec4899;">
+      <h3><span class="dot" style="background:#ec4899;"></span> 수직항력 <span style="font-size:12px;color:#64748b;">(면이 떠받치는 힘)</span></h3>
+      <div class="row"><label><input type="checkbox" id="on_n" checked> 켜기</label></div>
+      <div class="row"><label>크기 (N)</label><input type="range" id="mag_n" min="0" max="50" value="20"><input type="number" id="num_n" min="0" max="50" value="20"></div>
+      <div class="row"><label>방향 (°)</label><input type="range" id="dir_n" min="0" max="360" value="90"><input type="number" id="numdir_n" min="0" max="360" value="90"></div>
+      <div class="row"><label>빠른방향</label>
+        <button class="dir-btn" data-t="n" data-d="90">⬆ 위</button>
+        <button class="dir-btn" data-t="n" data-d="270">⬇ 아래</button>
+        <button class="dir-btn" data-t="n" data-d="0">➡ 오른쪽</button>
+        <button class="dir-btn" data-t="n" data-d="180">⬅ 왼쪽</button>
+      </div>
+      <div class="legend">보통 면에 수직 위쪽(90°)으로 설정. 빗면에서는 빗면에 수직으로!</div>
+    </div>
+
+    <div class="force-card" style="border-left:6px solid #3b82f6;">
+      <h3><span class="dot" style="background:#3b82f6;"></span> 부력 <span class="fixed-tag">방향: 위 고정</span></h3>
+      <div class="row"><label><input type="checkbox" id="on_b" checked> 켜기</label></div>
+      <div class="row"><label>크기 (N)</label><input type="range" id="mag_b" min="0" max="50" value="0"><input type="number" id="num_b" min="0" max="50" value="0"></div>
+    </div>
+
+    <div class="force-card" style="border-left:6px solid #22c55e;">
+      <h3><span class="dot" style="background:#22c55e;"></span> 탄성력 <span style="font-size:12px;color:#64748b;">(용수철힘)</span></h3>
+      <div class="row"><label><input type="checkbox" id="on_e" checked> 켜기</label></div>
+      <div class="row"><label>크기 (N)</label><input type="range" id="mag_e" min="0" max="50" value="0"><input type="number" id="num_e" min="0" max="50" value="0"></div>
+      <div class="row"><label>방향 (°)</label><input type="range" id="dir_e" min="0" max="360" value="90"><input type="number" id="numdir_e" min="0" max="360" value="90"></div>
+      <div class="row"><label>빠른방향</label>
+        <button class="dir-btn" data-t="e" data-d="90">⬆ 위</button>
+        <button class="dir-btn" data-t="e" data-d="270">⬇ 아래</button>
+        <button class="dir-btn" data-t="e" data-d="0">➡ 오른쪽</button>
+        <button class="dir-btn" data-t="e" data-d="180">⬅ 왼쪽</button>
+      </div>
+      <div class="legend">각도 기준: 0°=오른쪽, 90°=위, 180°=왼쪽, 270°=아래</div>
+    </div>
+
+    <div class="force-card" style="border-left:6px solid #f59e0b;">
+      <h3><span class="dot" style="background:#f59e0b;"></span> 마찰력</h3>
+      <div class="row"><label><input type="checkbox" id="on_f" checked> 켜기</label></div>
+      <div class="row"><label>크기 (N)</label><input type="range" id="mag_f" min="0" max="50" value="0"><input type="number" id="num_f" min="0" max="50" value="0"></div>
+      <div class="row"><label>방향 (°)</label><input type="range" id="dir_f" min="0" max="360" value="180"><input type="number" id="numdir_f" min="0" max="360" value="180"></div>
+      <div class="row"><label>빠른방향</label>
+        <button class="dir-btn" data-t="f" data-d="90">⬆ 위</button>
+        <button class="dir-btn" data-t="f" data-d="270">⬇ 아래</button>
+        <button class="dir-btn" data-t="f" data-d="0">➡ 오른쪽</button>
+        <button class="dir-btn" data-t="f" data-d="180">⬅ 왼쪽</button>
+      </div>
+      <div class="legend">운동 반대 방향으로 설정해 보세요!</div>
+    </div>
+
+    <button class="primary" id="copyBtn" style="width:100%;margin-top:6px;">📋 현재 설정 복사 (친구와 공유)</button>
+    <div class="legend" style="margin-top:6px;">학습 질문: ① 합력이 0이 되려면? ② 마찰력 방향을 바꾸면 물체는? ③ 부력을 키우면?</div>
+  </div>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+const svg = document.getElementById('arrowSvg');
+const obj = document.getElementById('obj');
+const bgLayer = document.getElementById('bgLayer');
+const bgPlaceholder = document.getElementById('bgPlaceholder');
+
+// 상태
+let objPos = { x: 0.5, y: 0.55 }; // 비율
+function syncObjPos() {
+  const r = stage.getBoundingClientRect();
+  obj.style.left = (objPos.x * r.width) + 'px';
+  obj.style.top = (objPos.y * r.height) + 'px';
+}
+function objCenter() {
+  const r = stage.getBoundingClientRect();
+  return { x: objPos.x * r.width, y: objPos.y * r.height, w: r.width, h: r.height };
+}
+
+// 드래그
+let drag = false;
+obj.addEventListener('pointerdown', e => { drag = true; obj.setPointerCapture(e.pointerId); });
+window.addEventListener('pointerup', () => drag = false);
+stage.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const r = stage.getBoundingClientRect();
+  objPos.x = Math.min(0.92, Math.max(0.08, (e.clientX - r.left) / r.width));
+  objPos.y = Math.min(0.9, Math.max(0.1, (e.clientY - r.top) / r.height));
+  syncObjPos(); draw();
+});
+
+// 입력 헬퍼
+function link(sliderId, numId, cb) {
+  const s = document.getElementById(sliderId), n = document.getElementById(numId);
+  s.addEventListener('input', () => { n.value = s.value; cb(); });
+  n.addEventListener('input', () => { s.value = n.value; cb(); });
+}
+['on_g','on_n','on_b','on_e','on_f','mag_g','mag_n','mag_b','mag_e','mag_f','dir_n','dir_e','dir_f','scale','showNet','showLabel','spread']
+  .forEach(id => document.getElementById(id).addEventListener('input', draw));
+link('mag_g','num_g',draw); link('mag_b','num_b',draw); link('mag_n','num_n',draw);
+link('mag_e','num_e',draw); link('mag_f','num_f',draw);
+link('dir_n','numdir_n',draw); link('dir_e','numdir_e',draw); link('dir_f','numdir_f',draw);
+
+document.getElementById('scale').addEventListener('input', e => {
+  document.getElementById('scaleVal').textContent = e.target.value + ' px/N';
+});
+
+document.querySelectorAll('.dir-btn').forEach(b => b.addEventListener('click', () => {
+  const t = b.dataset.t, d = b.dataset.d;
+  const sid = t === 'e' ? 'dir_e' : (t === 'n' ? 'dir_n' : 'dir_f');
+  const nid = t === 'e' ? 'numdir_e' : (t === 'n' ? 'numdir_n' : 'numdir_f');
+  document.getElementById(sid).value = d;
+  document.getElementById(nid).value = d;
+  draw();
+}));
+
+// 힘 정의: 각도 deg (수학 기준: 0=오른쪽, 90=위). 화면 y는 아래가 +이므로 y = -sin
+function getForces() {
+  const g = (document.getElementById('on_g').checked ? +document.getElementById('mag_g').value : 0);
+  const n = (document.getElementById('on_n').checked ? +document.getElementById('mag_n').value : 0);
+  const b = (document.getElementById('on_b').checked ? +document.getElementById('mag_b').value : 0);
+  const e = (document.getElementById('on_e').checked ? +document.getElementById('mag_e').value : 0);
+  const f = (document.getElementById('on_f').checked ? +document.getElementById('mag_f').value : 0);
+  const dn = +document.getElementById('dir_n').value;
+  const de = +document.getElementById('dir_e').value;
+  const df = +document.getElementById('dir_f').value;
+  return [
+    { name:'중력', mag:g, deg:270, color:'#ef4444' },   // 아래 고정
+    { name:'수직항력', mag:n, deg:dn, color:'#ec4899' },
+    { name:'부력', mag:b, deg:90, color:'#3b82f6' },    // 위 고정
+    { name:'탄성력', mag:e, deg:de, color:'#22c55e' },
+    { name:'마찰력', mag:f, deg:df, color:'#f59e0b' },
+  ];
+}
+function vec(mag, deg) {
+  const r = deg * Math.PI / 180;
+  return { x: mag * Math.cos(r), y: -mag * Math.sin(r) }; // 화면 y 반전 보정? 물리 y=위+ → 화면은 아래+이므로 -sin... 아래(270°): sin270=-1 → y=+mag (화면 아래) 정상
+}
+
+function draw() {
+  const c = objCenter();
+  const scale = +document.getElementById('scale').value;
+  const showNet = document.getElementById('showNet').checked;
+  const showLabel = document.getElementById('showLabel').checked;
+  const spreadOn = document.getElementById('spread').checked;
+  const forces = getForces();
+  svg.setAttribute('viewBox', `0 0 ${c.w} ${c.h}`);
+  svg.innerHTML = `
+    <defs>
+      ${forces.map((f,i)=>`<marker id="a${i}" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 z" fill="${f.color}"/></marker>`).join('')}
+      <marker id="aNet" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,5 L0,10 z" fill="#7c3aed"/></marker>
+    </defs>`;
+  let fx = 0, fy = 0; // 물리 좌표계: x=오른쪽+, y=위+
+  forces.forEach((f,i) => {
+    // 물리 합력 계산
+    const v = vec(f.mag, f.deg);
+    // 화면 표시용: x는 그대로, y는 부호 반전된 v.y를 그대로 화면 y로 사용
+    // vec에서 이미 화면보정 했으므로 v가 화면 벡터. 물리 y는 -v.y
+    fx += v.x; fy += -v.y * -1; // 정리: 물리Fy = mag*sin(deg)
+    // 실제로 간단히: 물리Fy = mag*sin(rad)
+    return;
+  });
+  // 합력 재계산 (명확히)
+  fx = 0; let fyPhys = 0;
+  forces.forEach(f => {
+    const r = f.deg * Math.PI/180;
+    fx += f.mag * Math.cos(r);
+    fyPhys += f.mag * Math.sin(r); // 위+
+  });
+
+  // 같은 방향 힘은 옆으로 펼쳐서 겹침 방지 (30° 단위로 그룹화)
+  const START = 16; // 작용점(빨간점) 반지름 밖에서 시작 → 작은 힘도 보이게
+  const active = forces.map((f,i)=>({...f, idx:i})).filter(f=>f.mag>0);
+  const groups = {};
+  active.forEach(f=>{
+    let key = Math.round(f.deg/30)*30 % 360;
+    if (key < 0) key += 360;
+    (groups[key] = groups[key] || []).push(f);
+  });
+
+  Object.values(groups).forEach(g=>{
+    g.forEach((f,k)=>{
+      const r = f.deg * Math.PI/180;
+      const dx = Math.cos(r), dy = -Math.sin(r); // 화면
+      const px = -dy, py = dx; // 수직(옆) 방향
+      const off = spreadOn ? (k - (g.length-1)/2) * 9 : 0;
+      const len = Math.min(200, 14 + f.mag * scale); // 최소길이 보장
+      const x1 = c.x + dx*START + px*off, y1 = c.y + dy*START + py*off;
+      const x2 = c.x + dx*(START+len) + px*off, y2 = c.y + dy*(START+len) + py*off;
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+      line.setAttribute('stroke',f.color); line.setAttribute('stroke-width','4'); line.setAttribute('stroke-linecap','round');
+      line.setAttribute('marker-end',`url(#a${f.idx})`);
+      svg.appendChild(line);
+      if (showLabel) {
+        const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+        // 라벨도 펼침 방향으로 분산 → 겹침 방지
+        const ly = y2 + (spreadOn && g.length>1 ? (k-(g.length-1)/2)*16 : 0);
+        t.setAttribute('x', x2 + 7); t.setAttribute('y', ly - 4);
+        t.setAttribute('font-size','13'); t.setAttribute('font-weight','bold');
+        t.setAttribute('fill',f.color); t.setAttribute('stroke','#fff'); t.setAttribute('stroke-width','3'); t.setAttribute('paint-order','stroke');
+        t.textContent = `${f.name} ${f.mag}N`;
+        svg.appendChild(t);
+      }
+    });
+  });
+
+  const netMag = Math.hypot(fx, fyPhys);
+  let netDeg = netMag < 0.01 ? 0 : Math.atan2(fyPhys, fx)*180/Math.PI;
+  if (netDeg < 0) netDeg += 360;
+  // 합력 화살표 (화면)
+  if (showNet && netMag >= 0.5) {
+    const r = netDeg*Math.PI/180;
+    const dx = Math.cos(r), dy = -Math.sin(r);
+    const len = Math.min(220, 14 + netMag*scale);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',c.x+dx*START); line.setAttribute('y1',c.y+dy*START);
+    line.setAttribute('x2',c.x+dx*(START+len)); line.setAttribute('y2',c.y+dy*(START+len));
+    line.setAttribute('stroke','#7c3aed'); line.setAttribute('stroke-width','5'); line.setAttribute('stroke-dasharray','10 5'); line.setAttribute('stroke-linecap','round');
+    line.setAttribute('marker-end','url(#aNet)');
+    svg.appendChild(line);
+    if (showLabel) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', c.x+dx*(START+len)+7); t.setAttribute('y', c.y+dy*(START+len)+16);
+      t.setAttribute('font-size','13'); t.setAttribute('font-weight','bold');
+      t.setAttribute('fill','#7c3aed'); t.setAttribute('stroke','#fff'); t.setAttribute('stroke-width','3'); t.setAttribute('paint-order','stroke');
+      t.textContent = `합력 ${netMag.toFixed(1)}N`;
+      svg.appendChild(t);
+    }
+  }
+
+  const box = document.getElementById('statusBox');
+  const dirName = netMag < 0.5 ? '—' : dirKo(netDeg);
+  if (netMag < 0.5) {
+    box.className = 'eq';
+    box.innerHTML = `⚖️ <b>정적평형 상태 (합력 ≈ 0N)</b><br>모든 힘의 합이 0이므로 물체는 <b>정지 유지 또는 등속운동</b>을 합니다.`;
+  } else {
+    box.className = 'mv';
+    box.innerHTML = `🚀 <b>운동 상태 (합력 ${netMag.toFixed(1)}N, ${dirName} 방향)</b><br>물체는 합력 방향(<b>${netDeg.toFixed(0)}°</b>)으로 <b>가속</b>합니다. 평형으로 만들려면 반대 방향 힘을 키워 보세요!`;
+  }
+}
+function dirKo(deg) {
+  // 0=오른쪽,90=위,180=왼쪽,270=아래
+  const dirs = [[0,'오른쪽'],[90,'위쪽'],[180,'왼쪽'],[270,'아래쪽']];
+  let best = dirs[0], bd = 360;
+  dirs.forEach(d => { let diff = Math.abs(deg - d[0]); diff = Math.min(diff, 360-diff); if (diff < bd){bd=diff;best=d;} });
+  if (bd <= 22) return best[1];
+  if (deg>0&&deg<90) return '오른쪽 위 대각선';
+  if (deg>90&&deg<180) return '왼쪽 위 대각선';
+  if (deg>180&&deg<270) return '왼쪽 아래 대각선';
+  return '오른쪽 아래 대각선';
+}
+
+// 상황 선택 (정지 / 움직이는) → 파일 이름에 반영
+let situation = '정지상태';
+const stStop = document.getElementById('stStop'), stMove = document.getElementById('stMove');
+function setSituation(s) {
+  situation = s;
+  stStop.classList.toggle('sel', s === '정지상태');
+  stMove.classList.toggle('sel', s === '움직이는상태');
+}
+stStop.addEventListener('click', () => setSituation('정지상태'));
+stMove.addEventListener('click', () => setSituation('움직이는상태'));
+
+// 프리셋
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+  const p = b.dataset.preset;
+  const set = (id,v) => { document.getElementById(id).value = v; const n = document.getElementById('num_'+id.split('_')[1]); if(n) n.value = v; };
+  const setDir = (id,v) => { document.getElementById(id).value = v; const nid = id.startsWith('dir_') ? 'numdir_'+id.split('_')[1] : null; if(nid) document.getElementById(nid).value = v; };
+  const on = (id,v) => document.getElementById(id).checked = v;
+  if (p==='desk'){ set('mag_g',20); set('mag_n',20); setDir('dir_n',90); set('mag_e',0); set('mag_b',0); set('mag_f',0); on('on_g',true);on('on_n',true);on('on_e',true);on('on_b',true);on('on_f',true); }
+  if (p==='float'){ set('mag_g',20); set('mag_b',20); set('mag_n',0); set('mag_e',0); set('mag_f',0); }
+  if (p==='push'){ set('mag_g',20); set('mag_n',20); setDir('dir_n',90); set('mag_e',12); setDir('dir_e',0); set('mag_f',8); setDir('dir_f',180); set('mag_b',0); }
+  if (p==='fall'){ set('mag_g',20); set('mag_n',0); set('mag_e',0); set('mag_b',0); set('mag_f',0); }
+  // 프리셋에 따라 상황 자동 선택
+  if (p==='desk' || p==='float') setSituation('정지상태');
+  if (p==='push' || p==='fall') setSituation('움직이는상태');
+  draw();
+}));
+document.getElementById('resetObj').addEventListener('click', () => { objPos={x:0.5,y:0.55}; syncObjPos(); draw(); });
+
+// 배경: 파일 / 붙여넣기 / 드래그드롭 (원본 이미지를 export용으로 보관)
+let bgImg = null, bgURL = '';
+function setBg(url) {
+  bgURL = url;
+  bgLayer.style.backgroundImage = `url("${url}")`;
+  bgLayer.style.backgroundSize = 'contain'; // 항상 다 보이게
+  bgLayer.style.opacity = '1';
+  bgPlaceholder.style.display = 'none';
+  bgImg = new Image();
+  bgImg.crossOrigin = 'anonymous';
+  bgImg.src = url;
+}
+document.getElementById('fileInput').addEventListener('change', e => {
+  const f = e.target.files[0]; if(!f) return;
+  setBg(URL.createObjectURL(f));
+});
+document.getElementById('clearBg').addEventListener('click', () => {
+  bgLayer.style.backgroundImage=''; bgPlaceholder.style.display='flex';
+  bgImg = null; bgURL = '';
+});
+// 배경은 항상 다 보이게(contain) 고정 → 채우기/밝기 옵션 없음
+
+// ⭐ 복사-붙여넣기 핵심
+window.addEventListener('paste', e => {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const it of items) {
+    if (it.type.startsWith('image/')) {
+      const f = it.getAsFile();
+      setBg(URL.createObjectURL(f));
+      e.preventDefault();
+      alert('📷 사진이 배경으로 들어갔습니다!');
+      return;
+    }
+  }
+  // 이미지 URL 텍스트를 붙여넣은 경우
+  const txt = e.clipboardData.getData('text');
+  if (txt && txt.match(/^https?:\/\/.*\.(png|jpe?g|gif|webp)(\?.*)?$/i)) {
+    setBg(txt); e.preventDefault();
+    alert('🌐 이미지 주소로 배경을 넣었습니다!');
+  }
+});
+['dragover','drop'].forEach(ev => stage.addEventListener(ev, e => {
+  e.preventDefault();
+  if (ev==='drop' && e.dataTransfer.files[0] && e.dataTransfer.files[0].type.startsWith('image/'))
+    setBg(URL.createObjectURL(e.dataTransfer.files[0]));
+}));
+
+// 설정 복사
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const s = `중력${document.getElementById('mag_g').value}N, 수직항력${document.getElementById('mag_n').value}N@${document.getElementById('dir_n').value}°, 부력${document.getElementById('mag_b').value}N, 탄성력${document.getElementById('mag_e').value}N@${document.getElementById('dir_e').value}°, 마찰력${document.getElementById('mag_f').value}N@${document.getElementById('dir_f').value}°`;
+  try { await navigator.clipboard.writeText(s); alert('복사됨: '+s); }
+  catch { prompt('복사해서 공유하세요:', s); }
+});
+
+// ---- 결과 출력: PNG / PDF ----
+function fileBase() {
+  const d = new Date();
+  const t = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+  return `${situation}_힘화살표_${t}`;
+}
+function drawExportCanvas() {
+  const r = stage.getBoundingClientRect();
+  const W = Math.round(r.width), H = Math.round(r.height);
+  const cv = document.createElement('canvas');
+  cv.width = W * 2; cv.height = H * 2 + 80; // 상단 제목 여백
+  const ctx = cv.getContext('2d');
+  const S = 2; // 고해상도 배율
+  // 제목 바
+  ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, cv.width, 80);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 30px Malgun Gothic, sans-serif';
+  ctx.fillText(`힘의 화살표 - ${situation} (${document.getElementById('statusBox').innerText.split('\n')[0].slice(0,40)})`, 16, 50);
+  ctx.save(); ctx.translate(0, 80); ctx.scale(S, S);
+  // 배경 그리기 (항상 다 보이게 contain 고정)
+  const op = 1;
+  ctx.fillStyle = '#e2e8f0'; ctx.fillRect(0, 0, W, H);
+  if (bgImg && bgImg.complete && bgImg.naturalWidth) {
+    ctx.save(); ctx.globalAlpha = op;
+    try {
+      // 항상 다 보이게(contain)
+      const s = Math.min(W / bgImg.naturalWidth, H / bgImg.naturalHeight);
+      const dw = bgImg.naturalWidth * s, dh = bgImg.naturalHeight * s;
+      ctx.drawImage(bgImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    } catch (e) { /* 외부 URL CORS 시 배경 제외 */ }
+    ctx.restore();
+  }
+  // 화살표 그리기 (화면과 동일 계산)
+  const scale = +document.getElementById('scale').value;
+  const showNet = document.getElementById('showNet').checked;
+  const showLabel = document.getElementById('showLabel').checked;
+  const spreadOn = document.getElementById('spread').checked;
+  const forces = getForces();
+  const cx = objPos.x * W, cy = objPos.y * H;
+  const START = 16;
+  function arrow(x1, y1, x2, y2, color, width, dash, head) {
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    if (dash) ctx.setLineDash([10, 5]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    const hs = head || 8;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - hs * Math.cos(ang - 0.35), y2 - hs * Math.sin(ang - 0.35));
+    ctx.lineTo(x2 - hs * Math.cos(ang + 0.35), y2 - hs * Math.sin(ang + 0.35));
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  const active = forces.filter(f=>f.mag>0);
+  const groups = {};
+  active.forEach(f=>{
+    let key = Math.round(f.deg/30)*30 % 360;
+    if (key < 0) key += 360;
+    (groups[key] = groups[key] || []).push(f);
+  });
+  Object.values(groups).forEach(g=>{
+    g.forEach((f,k)=>{
+      const rad = f.deg * Math.PI / 180;
+      const dx = Math.cos(rad), dy = -Math.sin(rad);
+      const px = -dy, py = dx;
+      const off = spreadOn ? (k-(g.length-1)/2)*9 : 0;
+      const len = Math.min(200, 14 + f.mag * scale);
+      const x1 = cx + dx*START + px*off, y1 = cy + dy*START + py*off;
+      const x2 = cx + dx*(START+len) + px*off, y2 = cy + dy*(START+len) + py*off;
+      arrow(x1, y1, x2, y2, f.color, 4, false, 8);
+      if (showLabel) {
+        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+        ctx.lineWidth = 4; ctx.strokeStyle = '#fff';
+        const ly = y2 + (spreadOn && g.length>1 ? (k-(g.length-1)/2)*16 : 0);
+        ctx.strokeText(`${f.name} ${f.mag}N`, x2 + 7, ly - 4);
+        ctx.fillStyle = f.color; ctx.fillText(`${f.name} ${f.mag}N`, x2 + 7, ly - 4);
+      }
+    });
+  });
+  let fx = 0, fyP = 0;
+  forces.forEach(f => { const rad = f.deg * Math.PI / 180; fx += f.mag * Math.cos(rad); fyP += f.mag * Math.sin(rad); });
+  const netMag = Math.hypot(fx, fyP);
+  if (showNet && netMag >= 0.5) {
+    const nd = Math.atan2(fyP, fx), dx = Math.cos(nd), dy = -Math.sin(nd);
+    const len = Math.min(220, 14 + netMag * scale);
+    arrow(cx+dx*START, cy+dy*START, cx + dx*(START+len), cy + dy*(START+len), '#7c3aed', 5, true, 9);
+    if (showLabel) {
+      ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+      ctx.lineWidth = 4; ctx.strokeStyle = '#fff';
+      ctx.strokeText(`합력 ${netMag.toFixed(1)}N`, cx + dx*(START+len) + 7, cy + dy*(START+len) + 16);
+      ctx.fillStyle = '#7c3aed'; ctx.fillText(`합력 ${netMag.toFixed(1)}N`, cx + dx*(START+len) + 7, cy + dy*(START+len) + 16);
+    }
+  }
+  // 작용점
+  ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+  ctx.fillStyle = '#dc2626'; ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+  ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+  ctx.lineWidth = 3; ctx.strokeStyle = '#fff';
+  ctx.strokeText('작용점', cx - 20, cy + 30);
+  ctx.fillStyle = '#0f172a'; ctx.fillText('작용점', cx - 20, cy + 30);
+  ctx.restore();
+  return cv;
+}
+// 웹페이지 폴더에 바로 저장: File System Access API 우선, 실패 시 다운로드 폴더로 저장
+async function saveBlob(blob, filename) {
+  try {
+    if (window.showSavePicker) {
+      const h = await window.showSavePicker({ suggestedName: filename, types: [{ description: 'PNG image', accept: { 'image/png': ['.png'] } }] });
+      const w = await h.createWritable();
+      await w.write(blob); await w.close();
+      alert(`✅ 저장됨: ${filename}\n웹페이지와 같은 폴더를 선택하면 바로 옆에 생성됩니다.`);
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  alert(`✅ 다운로드 폴더에 저장됨: ${filename}\n(브라우저 보안상 자동 저장은 다운로드 폴더로 됩니다. 웹페이지 옆에 두려면 저장 위치를 웹페이지 폴더로 지정하세요.)`);
+}
+document.getElementById('pngBtn').addEventListener('click', () => {
+  const cv = drawExportCanvas();
+  cv.toBlob(b => saveBlob(b, fileBase() + '.png'), 'image/png');
+});
+document.getElementById('pdfBtn').addEventListener('click', () => {
+  const cv = drawExportCanvas();
+  const img = cv.toDataURL('image/png');
+  const pa = document.getElementById('printArea');
+  pa.innerHTML = `<h2>힘의 화살표 결과 - ${situation}</h2>
+    <p>${document.getElementById('statusBox').innerText}</p>
+    <p>중력 ${document.getElementById('mag_g').value}N / 수직항력 ${document.getElementById('mag_n').value}N@${document.getElementById('dir_n').value}° / 부력 ${document.getElementById('mag_b').value}N / 탄성력 ${document.getElementById('mag_e').value}N@${document.getElementById('dir_e').value}° / 마찰력 ${document.getElementById('mag_f').value}N@${document.getElementById('dir_f').value}°</p>
+    <img src="${img}" style="width:100%;border:1px solid #ccc;">`;
+  document.title = fileBase(); // PDF 저장 시 파일명에 상황 포함
+  window.print();
+});
+
+window.addEventListener('resize', () => { syncObjPos(); draw(); });
+syncObjPos(); draw();
+</script>
+</body>
+</html>
