@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중1 · 샤를 법칙 시뮬레이션 (입자 충돌로 이해하기)</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:#f1f5fb;color:#223}
+header{background:#274b8f;color:#fff;padding:14px 20px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:14px;opacity:.9}
+nav{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;background:#dfe8f7}
+nav button{border:0;border-radius:18px;padding:8px 14px;font-size:14px;cursor:pointer;background:#fff;color:#274b8f;font-weight:600}
+nav button.on{background:#274b8f;color:#fff}
+.stage{display:none;padding:12px 16px 30px;max-width:1100px;margin:0 auto}
+.stage.on{display:block}
+.stage h2{margin:6px 0;font-size:20px;color:#274b8f}
+.goal{background:#fff;border-left:5px solid #f0a02b;padding:10px 12px;border-radius:6px;margin:6px 0 12px;line-height:1.55}
+.wrap{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+canvas{background:#fff;border-radius:10px;box-shadow:0 1px 4px #0003;max-width:100%}
+.right{flex:1;min-width:300px}
+.ctl{background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:8px}
+.ctl label{display:block;font-size:14px;margin-bottom:2px}
+.ctl input[type=range]{width:100%}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.btns button{border:0;background:#274b8f;color:#fff;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:13px}
+.reads{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.reads small{color:#667}
+.row{display:grid;grid-template-columns:170px 1fr 56px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
+.bar{height:14px;background:#e6ebf4;border-radius:7px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:7px}
+.row b{text-align:right}
+.status{border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:14px;line-height:1.55;background:#eef3ff;min-height:64px}
+.status.up{background:#ffe9e6}.status.down{background:#e5f0ff}.status.eq{background:#e6f7e9}
+.think{background:#fffbe8;border-radius:8px;padding:10px 12px 10px 30px;font-size:13px;line-height:1.6;margin:8px 0}
+.note{font-size:12px;color:#556;margin-top:4px}
+label.chk{font-size:13px;display:block;margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+<h1>기체 입자 시뮬레이션: 온도가 오르면 부피가 왜 커질까?</h1>
+<p>중학교 1학년 · 입자의 운동 · 샤를 법칙 · 단계별로 따라가 보세요 (1단계 → 5단계)</p>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<script>
+const N=150, S=8, W=280, X0=40, FL=430, R=4, ATM=57, WIN=2, TAU=2.0;
+const gauss=()=>{let u=0;while(!u)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random());};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+class Sim{
+  constructor(cv,c){this.cv=cv;this.g=cv.getContext('2d');this.c=c;
+    this.Ts=c.T0;this.T=c.T0;this.h=c.h0;this.hT=c.h0;this.pext=c.pext0;this.reset();}
+  reset(){
+    const ux=[],uy=[];
+    for(let i=0;i<N;i++){ux.push(gauss());uy.push(gauss());}
+    const nx=Math.sqrt(ux.reduce((a,b)=>a+b*b,0)/N),ny=Math.sqrt(uy.reduce((a,b)=>a+b*b,0)/N);
+    this.ux=ux.map(v=>v/nx);this.uy=uy.map(v=>v/ny);
+    this.x=[];this.y=[];
+    const top=FL-this.h;
+    for(let i=0;i<N;i++){this.x.push(X0+R+Math.random()*(W-2*R));this.y.push(top+R+Math.random()*(this.h-2*R));}
+    this.ev=[];this.t=0;this.pf=this.pext;this.vps=0;this.mv=0;this.flash=0;
+    this.stat={s:0,f:0,P:0};this.dots=[];this.rec=0;this.hs=this.h;
+  }
+  step(dt){
+    const c=this.c;
+    this.T+=(this.Ts-this.T)*Math.min(1,dt*4);
+    const Tk=this.T+273.15, vf=S*Math.sqrt(Tk);
+    if(c.mode==='free'){
+      let vp=this.h*(this.pf-this.pext)/(this.pext*TAU);
+      vp=clamp(vp,-120,120);
+      this.h=clamp(this.h+vp*dt,70,330);
+      this.vps+=(vp-this.vps)*Math.min(1,dt*1.2);
+      const a=Math.abs(this.vps);
+      if(this.mv===0&&a>8)this.mv=Math.sign(this.vps);
+      else if(this.mv!==0&&(a<3||Math.sign(this.vps)!==this.mv))this.mv=a>8?Math.sign(this.vps):0;
+    }else if(c.mode==='slider'){
+      this.h+=(this.hT-this.h)*Math.min(1,dt*6);
+    }
+    const top=FL-this.h;
+    let imp=0;
+    for(let i=0;i<N;i++){
+      this.x[i]+=this.ux[i]*vf*dt;this.y[i]+=this.uy[i]*vf*dt;
+      if(this.x[i]<X0+R){this.x[i]=X0+R;this.ux[i]=Math.abs(this.ux[i]);}
+      if(this.x[i]>X0+W-R){this.x[i]=X0+W-R;this.ux[i]=-Math.abs(this.ux[i]);}
+      if(this.y[i]>FL-R){this.y[i]=FL-R;this.uy[i]=-Math.abs(this.uy[i]);}
+      if(this.y[i]<top+R){
+        this.y[i]=top+R;
+        if(this.uy[i]<0){
+          this.uy[i]=-this.uy[i];
+          const j=2*Math.abs(this.uy[i])*vf;
+          imp+=j;this.ev.push({t:this.t,j});this.flash=0.08;
+        }
+      }
+    }
+    this.t+=dt;
+    while(this.ev.length&&this.ev[0].t<this.t-WIN)this.ev.shift();
+    this.pf+=(imp/dt/W-this.pf)*Math.min(1,dt/1.0);
+    const win=Math.min(WIN,Math.max(this.t,0.5));
+    let sum=0;for(const e of this.ev)sum+=e.j;
+    const n=this.ev.length;
+    this.stat.s=n?sum/n/100:0;
+    this.stat.f=n/win/(W/100);
+    this.stat.P=this.stat.s*this.stat.f;
+    this.flash=Math.max(0,this.flash-dt);
+    this.hs+=(this.h-this.hs)*Math.min(1,dt/0.7);
+    this.vf=vf;
+    if(c.graph){
+      this.rec+=dt;
+      if(this.rec>0.4){this.rec=0;if(Math.abs(this.vps)<8){this.dots.push([this.T,this.hs]);if(this.dots.length>600)this.dots.shift();}}
+    }
+  }
+  draw(){
+    const g=this.g,c=this.c,top=FL-this.h,Tk=this.T+273.15;
+    g.clearRect(0,0,360,460);
+    g.fillStyle='#f4f8ff';g.fillRect(X0,top,W,this.h);
+    g.strokeStyle='#334';g.lineWidth=3;g.beginPath();
+    g.moveTo(X0,70);g.lineTo(X0,FL);g.lineTo(X0+W,FL);g.lineTo(X0+W,70);g.stroke();
+    const hue=clamp(240-(Tk-223)/(523-223)*240,0,240);
+    for(let i=0;i<N;i++){
+      g.fillStyle=`hsl(${hue},80%,50%)`;
+      g.beginPath();g.arc(this.x[i],this.y[i],R,0,6.283);g.fill();
+    }
+    if(c.track){
+      g.strokeStyle='#111';g.lineWidth=2;g.beginPath();g.arc(this.x[0],this.y[0],R+3,0,6.283);g.stroke();
+      g.beginPath();g.moveTo(this.x[0],this.y[0]);
+      g.lineTo(this.x[0]+this.ux[0]*this.vf*0.25,this.y[0]+this.uy[0]*this.vf*0.25);g.stroke();
+      g.fillStyle='#111';g.font='12px sans-serif';g.fillText('추적 입자',X0+4,FL+16);
+    }
+    g.fillStyle=this.flash>0?'#e8453c':'#667';
+    g.fillRect(X0+2,top-10,W-4,10);
+    if(c.arrows){
+      const le=Math.max(6,this.pext*0.75),li=Math.max(6,this.pf*0.75);
+      this.arrow(X0+70,top-12-le,top-12,'#2a6fdb');
+      g.fillStyle='#2a6fdb';g.font='bold 13px sans-serif';
+      g.fillText(c.extLabel||'바깥 압력',X0+84,top-14-le/2+4);
+      g.globalAlpha=0.7;
+      this.arrow(X0+W-70,top+8+li,top+8,'#d9382c');
+      g.globalAlpha=1;
+      g.fillStyle='#d9382c';g.fillText('안쪽 압력',X0+W-62-70,top+8+li+16);
+    }
+  }
+  arrow(x,y1,y2,col){
+    const g=this.g,d=y2>y1?1:-1;
+    g.strokeStyle=col;g.fillStyle=col;g.lineWidth=6;
+    g.beginPath();g.moveTo(x,y1);g.lineTo(x,y2-d*10);g.stroke();
+    g.beginPath();g.moveTo(x,y2);g.lineTo(x-10,y2-d*14);g.lineTo(x+10,y2-d*14);g.closePath();g.fill();
+  }
+}
+
+function slider(parent,label,min,max,step,val,fmt,cb){
+  const d=document.createElement('div');d.className='ctl';
+  d.innerHTML=`<label>${label}: <b></b></label><input type="range" min="${min}" max="${max}" step="${step}" value="${val}">`;
+  const b=d.querySelector('b'),inp=d.querySelector('input');
+  const upd=()=>{b.textContent=fmt(+inp.value)};
+  inp.oninput=()=>{upd();cb(+inp.value)};upd();parent.appendChild(d);
+  return {inp,upd};
+}
+
+const stages=[
+ {title:'1단계 · 온도와 입자 하나의 세기',
+  goal:'질문: 온도가 높아지면 입자 하나가 벽을 칠 때의 세기는 어떻게 달라질까? 온도 막대를 움직이고, 검은 원으로 표시한 입자의 화살표(속도)를 관찰해 보세요. 이 단계에서는 피스톤이 고정되어 있습니다.',
+  T0:27,h0:200,mode:'fixed',track:true,ctrl:['T'],rows:['speed','s','f','P'],
+  think:['온도가 높을수록 입자의 화살표는 길어지나요, 짧아지나요?','입자가 빠를수록 벽을 한 번 칠 때의 세기는 어떻게 될까요?','부피가 그대로인데 온도를 올렸더니 압력(세기×횟수)은 어떻게 되었나요? 그 이유는?']},
+ {title:'2단계 · 부피와 부딪히는 횟수',
+  goal:'질문: 같은 온도에서 부피(공간)를 줄이면 벽에 부딪히는 횟수는 어떻게 될까? 부피 막대로 피스톤을 직접 움직여 보세요. 온도가 같으므로 입자의 속도는 같습니다.',
+  T0:27,h0:200,mode:'slider',ctrl:['V'],rows:['s','f','P','V'],
+  think:['부피가 작아지면 같은 벽에 부딪히는 횟수가 늘어나나요, 줄어드나요?','부피가 달라져도 "한 번의 세기"는 거의 그대로인 이유는 무엇일까요?','횟수가 늘어난 만큼 압력은 어떻게 되었나요?']},
+ {title:'3단계 · 안쪽 압력과 바깥 압력, 피스톤의 이동',
+  goal:'질문: 바깥에서 누르는 힘(압력)과 안쪽 입자가 미는 힘이 다르면 피스톤은 어떻게 될까? 바깥 압력 막대를 바꾸고 피스톤이 움직이는 모습과 부딪힘 횟수의 변화를 보세요. 온도는 일정합니다. 보통 바깥 압력은 대기압입니다.',
+  T0:27,h0:180,mode:'free',arrows:true,pext0:ATM,ctrl:['P'],rows:['s','f','P','E','V'],
+  think:['바깥 압력을 올리면 피스톤은 어느 쪽으로 움직이나요? 그때 부딪힘 횟수는 어떻게 변하나요?','바깥 압력을 내리면 반대로 어떤 일이 일어날까요?','피스톤이 멈춘 평형 상태에서 안쪽 압력과 바깥 압력의 크기는 어떤가요? 입자는 멈춘 걸까요?']},
+ {title:'4단계 · 모두 함께 보기',
+  goal:'질문: 온도와 바깥 압력을 모두 바꾸면 세기, 횟수, 부피는 어떻게 함께 달라질까? 두 막대를 번갈아 바꾸며 "세기 × 횟수 = 안쪽 압력"이 바깥 압력과 같아지는 곳에서 피스톤이 멈추는지 확인해 보세요.',
+  T0:27,h0:180,mode:'free',arrows:true,pext0:ATM,ctrl:['T','P'],rows:['s','f','P','E','V'],
+  think:['바깥 압력은 그대로 두고 온도만 올리면 세기와 횟수는 각각 어떻게 변해서 압력이 같아지나요?','온도는 그대로 두고 바깥 압력만 올리면 부피가 줄어드는 이유는?','어떤 막대를 움직이든 마지막에는 무엇이 같아지나요?']},
+ {title:'5단계 · 온도와 부피의 관계 그래프',
+  goal:'질문: 바깥 압력(대기압)이 일정할 때 온도를 올리면 부피는 어떻게 변할까? 온도를 천천히 올리거나 "자동으로 올리기"를 눌러 점을 쌓아 보세요. 점이 어떤 모양으로 놓이는지, 직선으로 이어서 왼쪽으로 늘이면 어디에서 만나는지 확인합니다.',
+  T0:27,h0:180,mode:'free',arrows:true,pext0:ATM,extLabel:'대기압(일정)',graph:true,ctrl:['T'],rows:['s','f','P','E','V'],
+  think:['온도가 올라갈수록 부피는 어떻게 변하나요? 점들은 어떤 모양으로 놓이나요?','온도가 오르면 한 번의 세기는 커지는데 부딪힘 횟수는 어떻게 변해 압력이 일정하게 유지되나요?','직선을 왼쪽으로 늘이면 부피가 0이 되는 온도는 약 몇 °C인가요?']}
+];
+
+const rowDef={
+ speed:['입자 하나의 속도(상대값)','#8e5bd6',3],
+ s:['한 번 부딪힐 때 세기(평균)','#e07b00',6],
+ f:['부딪힘 횟수(초당, 벽 100칸당)','#2a9d8f',80],
+ P:['안쪽 압력 = 세기 × 횟수','#d9382c',160],
+ E:['바깥 압력','#2a6fdb',160],
+ V:['부피(칸)','#555',330]
+};
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');
+const sims=[],secs=[],btns=[];let active=0,last=performance.now();
+
+stages.forEach((cfg,idx)=>{
+  const b=document.createElement('button');b.textContent=(idx+1)+'단계';b.onclick=()=>show(idx);nav.appendChild(b);btns.push(b);
+  const sec=document.createElement('section');sec.className='stage';
+  sec.innerHTML=`<h2>${cfg.title}</h2><div class="goal">${cfg.goal}</div>
+   <div class="wrap"><div><canvas width="360" height="460"></canvas></div>
+   <div class="right"><div class="ctrls"></div><div class="btns"></div><div class="reads"><small>최근 ${WIN}초 동안의 평균값입니다.</small></div>
+   <div class="status"></div>
+   ${cfg.graph?'<canvas class="g" width="400" height="340"></canvas><label class="chk"><input type="checkbox" class="fit"> 점들을 직선으로 이어 보기</label>':''}
+   <ol class="think">${cfg.think.map(t=>`<li>${t}</li>`).join('')}</ol></div></div>`;
+  main.appendChild(sec);secs.push(sec);
+  const sim=new Sim(sec.querySelector('canvas'),{...cfg,pext0:cfg.pext0||ATM});
+  sims.push(sim);
+  const ctrls=sec.querySelector('.ctrls');
+  if(cfg.ctrl.includes('T'))sim.tS=slider(ctrls,'온도',-50,250,1,cfg.T0,v=>v+' °C',v=>{sim.Ts=v;sim.auto=false;});
+  if(cfg.ctrl.includes('V'))slider(ctrls,'부피(피스톤 위치)',90,330,1,cfg.h0,v=>v+' 칸',v=>{sim.hT=v;});
+  if(cfg.ctrl.includes('P'))sim.pS=slider(ctrls,'바깥 압력',35,120,1,ATM,v=>v+(v===ATM?' (대기압)':''),v=>{sim.pext=v;});
+  const bt=sec.querySelector('.btns');
+  const rb=document.createElement('button');rb.textContent='처음 상태로';
+  rb.onclick=()=>{sim.Ts=cfg.T0;sim.T=cfg.T0;sim.h=cfg.h0;sim.hT=cfg.h0;sim.pext=ATM;sim.auto=false;
+    if(sim.tS){sim.tS.inp.value=cfg.T0;sim.tS.upd();}
+    if(sim.pS){sim.pS.inp.value=ATM;sim.pS.upd();}
+    sec.querySelectorAll('.ctl input').forEach(i=>{if(!sim.tS&&!sim.pS)i.value=cfg.h0;});
+    sim.reset();};
+  bt.appendChild(rb);
+  if(cfg.graph){
+    const ab=document.createElement('button');ab.textContent='온도 자동으로 올리기';
+    ab.onclick=()=>{sim.auto=!sim.auto;if(sim.auto&&sim.Ts>=150){sim.Ts=-50;sim.tS.inp.value=-50;sim.tS.upd();}};
+    const cb=document.createElement('button');cb.textContent='점 지우기';cb.onclick=()=>{sim.dots=[];};
+    bt.appendChild(ab);bt.appendChild(cb);
+    sim.gcv=sec.querySelector('canvas.g');sim.fit=sec.querySelector('.fit');
+  }
+  const reads=sec.querySelector('.reads');sim.rows={};
+  cfg.rows.forEach(k=>{
+    const d=document.createElement('div');d.className='row';
+    d.innerHTML=`<span>${rowDef[k][0]}</span><div class="bar"><i style="background:${rowDef[k][1]}"></i></div><b>0</b>`;
+    reads.appendChild(d);sim.rows[k]={bar:d.querySelector('i'),val:d.querySelector('b'),max:rowDef[k][2]};
+  });
+  sim.status=sec.querySelector('.status');
+});
+
+function setRow(r,v,txt){r.bar.style.width=clamp(v/r.max*100,0,100)+'%';r.val.textContent=txt;}
+
+function update(sim,cfg){
+  const st=sim.stat,r=sim.rows;
+  if(r.speed)setRow(r.speed,sim.vf/100,(sim.vf/100).toFixed(2));
+  setRow(r.s,st.s,st.s.toFixed(2));
+  setRow(r.f,st.f,st.f.toFixed(1));
+  setRow(r.P,st.P,st.P.toFixed(0));
+  if(r.E)setRow(r.E,sim.pext,sim.pext.toFixed(0));
+  if(r.V)setRow(r.V,sim.h,sim.h.toFixed(0));
+  const s=sim.status;
+  if(cfg.mode==='free'){
+    if(sim.mv>0){s.className='status up';s.innerHTML='안쪽 압력이 바깥 압력보다 큽니다 → 피스톤이 바깥으로 밀려납니다 → 부피가 커집니다 → 같은 벽에 부딪히는 횟수가 줄어듭니다 → 안쪽 압력이 내려가 바깥 압력에 가까워집니다.';}
+    else if(sim.mv<0){s.className='status down';s.innerHTML='안쪽 압력이 바깥 압력보다 작습니다 → 피스톤이 안쪽으로 밀립니다 → 부피가 작아집니다 → 부딪히는 횟수가 늘어납니다 → 안쪽 압력이 올라 바깥 압력에 가까워집니다.';}
+    else{s.className='status eq';s.innerHTML='평형: 안쪽 압력과 바깥 압력이 같아 피스톤이 멈췄습니다. 입자는 계속 움직이고 있어서, 평균적으로 벽을 미는 정도가 같을 뿐입니다.';}
+  }else if(cfg.mode==='slider'){
+    s.innerHTML=`부피 ${sim.h.toFixed(0)}칸 → 부딪힘 횟수 ${st.f.toFixed(1)}. 부피가 작을수록 같은 벽에 더 자주 부딪힙니다. 온도가 같으므로 한 번의 세기(${st.s.toFixed(2)})는 거의 그대로입니다.`;
+  }else{
+    s.innerHTML=`온도 ${sim.T.toFixed(0)} °C → 입자 속도 ${(sim.vf/100).toFixed(2)}, 한 번의 세기 ${st.s.toFixed(2)}. 온도가 높을수록 입자가 빠르고 벽을 더 세게 칩니다. 부피가 같으니 부딪힘 횟수도 늘어 압력(${st.P.toFixed(0)})이 커집니다.`;
+  }
+  if(sim.gcv)drawGraph(sim);
+}
+
+function drawGraph(sim){
+  const cv=sim.gcv,g=cv.getContext('2d'),ml=48,mr=14,mt=14,mb=44,pw=cv.width-ml-mr,ph=cv.height-mt-mb;
+  const X=t=>ml+(t+300)/500*pw,Y=v=>mt+ph-(v/330)*ph;
+  g.clearRect(0,0,cv.width,cv.height);
+  g.strokeStyle='#e1e6ef';g.lineWidth=1;g.fillStyle='#445';g.font='11px sans-serif';g.textAlign='center';
+  for(let t=-300;t<=200;t+=100){g.beginPath();g.moveTo(X(t),mt);g.lineTo(X(t),mt+ph);g.stroke();g.fillText(t,X(t),mt+ph+14);}
+  g.textAlign='right';
+  for(let v=0;v<=300;v+=100){g.beginPath();g.moveTo(ml,Y(v));g.lineTo(ml+pw,Y(v));g.stroke();g.fillText(v,ml-5,Y(v)+4);}
+  g.strokeStyle='#334';g.lineWidth=2;g.beginPath();g.moveTo(ml,mt);g.lineTo(ml,mt+ph);g.lineTo(ml+pw,mt+ph);g.stroke();
+  g.textAlign='center';g.fillStyle='#223';g.font='13px sans-serif';
+  g.fillText('온도 (°C)',ml+pw/2,cv.height-6);
+  g.save();g.translate(13,mt+ph/2);g.rotate(-Math.PI/2);g.fillText('부피 (칸)',0,0);g.restore();
+  g.setLineDash([4,4]);g.strokeStyle='#8a5bd6';g.beginPath();g.moveTo(X(-273),mt);g.lineTo(X(-273),mt+ph);g.stroke();g.setLineDash([]);
+  g.fillStyle='#8a5bd6';g.font='11px sans-serif';g.textAlign='left';g.fillText('-273 °C',X(-273)+3,mt+12);
+  g.fillStyle='rgba(42,111,219,0.55)';
+  for(const d of sim.dots){g.beginPath();g.arc(X(d[0]),Y(d[1]),3,0,6.283);g.fill();}
+  if(sim.fit&&sim.fit.checked&&sim.dots.length>5){
+    const n=sim.dots.length;let sx=0,sy=0,sxx=0,sxy=0;
+    for(const d of sim.dots){sx+=d[0];sy+=d[1];sxx+=d[0]*d[0];sxy+=d[0]*d[1];}
+    const den=n*sxx-sx*sx;
+    if(Math.abs(den)>1e-6){
+      const b=(n*sxy-sx*sy)/den,a=(sy-b*sx)/n;
+      const t0=-300,t1=200,tz=-a/b;
+      let tl=Math.max(t0,tz);
+      g.strokeStyle='#d9382c';g.lineWidth=2;
+      let dmin=Infinity,dmax=-Infinity;for(const d of sim.dots){dmin=Math.min(dmin,d[0]);dmax=Math.max(dmax,d[0]);}
+      g.beginPath();g.moveTo(X(dmin),Y(a+b*dmin));g.lineTo(X(dmax),Y(a+b*dmax));g.stroke();
+      g.setLineDash([5,4]);g.beginPath();g.moveTo(X(dmin),Y(a+b*dmin));g.lineTo(X(tl),Y(Math.max(0,a+b*tl)));g.stroke();
+      g.beginPath();g.moveTo(X(dmax),Y(a+b*dmax));g.lineTo(X(t1),Y(a+b*t1));g.stroke();g.setLineDash([]);
+      if(tz>-300&&tz<200){g.fillStyle='#d9382c';g.beginPath();g.arc(X(tz),Y(0),5,0,6.283);g.fill();
+        g.textAlign='left';g.fillText('부피 0 → 약 '+tz.toFixed(0)+' °C',X(tz)+8,Y(0)-8);}
+    }
+  }
+  g.strokeStyle='#d9382c';g.lineWidth=2;g.fillStyle='#fff';
+  g.beginPath();g.arc(X(sim.T),Y(sim.hs),6,0,6.283);g.fill();g.stroke();
+  g.fillStyle='#223';g.font='12px sans-serif';g.textAlign='right';
+  g.fillText('부피 ∝ 온도(절대온도)',ml+pw-4,mt+14);
+}
+
+function show(i){
+  active=i;secs.forEach((s,k)=>s.classList.toggle('on',k===i));btns.forEach((b,k)=>b.classList.toggle('on',k===i));
+}
+function loop(now){
+  const dt=Math.min(0.04,(now-last)/1000);last=now;
+  const sim=sims[active],cfg=stages[active];
+  if(sim.auto){
+    sim.Ts=Math.min(150,sim.Ts+6*dt);sim.tS.inp.value=Math.round(sim.Ts);sim.tS.upd();
+    if(sim.Ts>=150)sim.auto=false;
+  }
+  if(dt>0){sim.step(dt);}
+  sim.draw();update(sim,cfg);
+  requestAnimationFrame(loop);
+}
+show(0);requestAnimationFrame(loop);
+</script>
+</body>
+</html>
